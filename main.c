@@ -91,7 +91,7 @@ void agregarDatos(){
         switch(opcion){
 
             case 1:
-                pritnf("que pasa");
+                /*Agregar causa en carpeta.*/
                 break;
 
             case 2:
