@@ -127,50 +127,50 @@ void agregarDatos(){
     }
 }
 
-void mostrarDatos() {
+void listarDatos() {
     int opcion = 0;
     while(opcion != 8){
         limpiarConsola();
         printf("===========================================================\n");
-        printf("=======================Mostrar Datos=======================\n");
+        printf("=======================Listar Datos========================\n");
         printf("===========================================================\n");
-        printf("1- Mostrar Causas.\n");
-        printf("2- Mostrar denuncias en carpeta.\n");
-        printf("3- Mostrar declaraciones en carpeta.\n");
-        printf("4- Mostrar pruebas en carpeta.\n");
-        printf("5- Mostrar diligencias en carpeta.\n");
-        printf("6- Mostrar resoluciones judiciales en carpeta.\n");
-        printf("7- Mostrar imputados en carpeta.\n");
+        printf("1- Listar Causas.\n");
+        printf("2- Listar denuncias en carpeta.\n");
+        printf("3- Listar declaraciones en carpeta.\n");
+        printf("4- Listar pruebas en carpeta.\n");
+        printf("5- Listar diligencias en carpeta.\n");
+        printf("6- Listar resoluciones judiciales en carpeta.\n");
+        printf("7- Listar imputados en carpeta.\n");
         printf("8- Volver atras.\n");
         printf("Ingrese una opcion:");
         leerOpcion(&opcion,1,8);
         switch(opcion){
 
             case 1:
-                /*  Mostrar causas*/
+                /*  Listar causas*/
                 break;
 
             case 2:
-                /*Mostrar denuncias en carpeta*/
+                /*Listar denuncias en carpeta*/
                 break;
 
             case 3:
-                /*Mostrar declaraciones en carpeta*/
+                /*Listar declaraciones en carpeta*/
                 break;
 
             case 4:
-                /*Mostrar pruebas en carpeta*/
+                /*Listar pruebas en carpeta*/
                 break;
 
             case 5:
-                /*Mostrar diligencias en carpeta*/
+                /*Listar diligencias en carpeta*/
                 break;
 
             case 6:
-                /*Mostrar resoluciones judiciales en carpeta*/
+                /*Listar resoluciones judiciales en carpeta*/
                 break;
             case 7:
-                /*Mostrar imputados en carpeta*/
+                /*Listar imputados en carpeta*/
                 break;
             case 8:
                 /*Volver atras*/
@@ -425,7 +425,7 @@ int main(void) {
         printf("========Sistema de Informacion y Atencion a Usuarios=======\n");
         printf("===========================================================\n");
         printf("1- Agregar Datos.\n");
-        printf("2- Mostrar Datos.\n");
+        printf("2- Listar Datos.\n");
         printf("3- Buscar Datos.\n");
         printf("4- Modificar Datos.\n");
         printf("5- Borrar Datos.\n");
@@ -440,8 +440,8 @@ int main(void) {
                 break;
 
             case 2:
-                /*Mostrar*/
-                mostrarDatos();
+                /*Listar*/
+                listarDatos();
                 break;
 
 
