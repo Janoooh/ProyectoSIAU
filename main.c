@@ -205,6 +205,7 @@ void buscarDatos() {
 
             case 1:
                 /*Buscar causa por RUC*/
+                printf("hola\n");
                 break;
 
             case 2:
