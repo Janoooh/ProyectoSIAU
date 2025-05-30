@@ -939,7 +939,6 @@ int main(void) {
         }
 
     }
-    printf("CAMBIO EN EL PROYECTO\n");
-    printf("eso es todo amigos");
+    printf("CAMBIO EN EL PROYECTO");
     return 0;
 }
