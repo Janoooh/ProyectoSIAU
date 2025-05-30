@@ -939,6 +939,6 @@ int main(void) {
         }
 
     }
-    printf("CAMBIO EN EL PROYECTO");
+
     return 0;
 }
