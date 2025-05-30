@@ -439,6 +439,37 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
 }
 
 
+/*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
+de datos correspondiente para que se llenen los campos. Recibe por parametro el
+tipo de registro que se desea crear. Retorna el nuevo registro creado.*/
+struct Registro * crearRegistro(int tipoRegistro){
+    struct Registro *nuevo = NULL;
+    /*Cadenas para indicar correctamente al usuario que ingresar, segun el contexto del tipo de registro*/
+    char *tiposInvolucrado[5] = {"denunciante:","declarante:","investigador:","involucrado:","destinatario de la resolucion:"};
+    char *tiposDetalle[5] = {"la descripcion de la denuncia:","el detalle de la declaracion:","la informacion de la prueba:","el detalle de la diligencia:","el tipo de resolucion judicial:"};
+    char *tiposFecha[5] = {"denuncia:","declaracion:","creacion del registro:","diligencia:","emision de la resolucion judicial:"};
+    char bufferInvolucrado[51] = "Ingrese el RUT del ";
+    char bufferDetalle[51] = "Ingrese ";
+    char bufferFecha[51] = "Ingrese la fecha de la ";
+
+    /*Reserva de memoria para el nuevo registro*/
+    nuevo = (struct Registro *) malloc(sizeof(struct Registro));
+
+    printf("Ingrese el id del registro:");
+    scanf("%d",&(nuevo->id));
+
+    nuevo->involucrado = leerCadena(strcat(bufferInvolucrado,tiposInvolucrado[tipoRegistro]));
+
+    nuevo->detalle = leerCadena(strcat(bufferDetalle,tiposDetalle[tipoRegistro]));
+
+    nuevo->fechaRegistro = leerCadena(strcat(bufferFecha,tiposFecha[tipoRegistro]));
+
+    nuevo->tipo = tipoRegistro;
+
+    return nuevo;
+
+}
+
 /*Funcion leerOpcion: Encargada de leer una opcion para un menu con cierta cantidad de opciones.
  Recibe por parametros una variable donde se leera la opcion, y dos limites(uno inferior y
  otro superior), los cuales permiten validar que el usuario ingrese una opcion dentro del
@@ -465,6 +496,7 @@ void limpiarConsola() {
 a un SIAU. Recibe por parametro una estructura SIAU.*/
 void agregarDatos(struct SIAU *siau){
     struct Causa *tempCausa;
+    struct Registro *tempRegistro;
     int opcion = 0;
     while(opcion != 8){
         /*limpiarConsola();*/
@@ -498,6 +530,9 @@ void agregarDatos(struct SIAU *siau){
 
             case 2:
                 /*Agregar denuncia a carpeta*/
+                tempRegistro = crearRegistro(4);
+                if (tempRegistro)printf("Registro creado bien.");
+                else printf("Registro creado mal :(");
                 break;
 
             case 3:
@@ -790,7 +825,7 @@ void otrasOpciones(struct SIAU * siau) {
         printf("2- Mostrar resoluciones judiciales de imputado.\n");
         printf("3- Mostrar resoluciones judiciales por tipo de resolucion.\n");
         printf("4- Generar reporte estadistico.\n");
-        printf("5- Funcion extra 1.\n");
+        printf("5- Eliminar causas con estado cerrado.\n");
         printf("6- Funcion extra 2.\n");
         printf("7- Volver atras.\n");
         printf("Ingrese una opcion:");
@@ -815,7 +850,7 @@ void otrasOpciones(struct SIAU * siau) {
                 break;
 
             case 5:
-                /*Funcion extra 1*/
+                /*Eliminar causas con estado cerrado.*/
                 break;
 
             case 6:
