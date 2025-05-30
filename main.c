@@ -198,6 +198,247 @@ int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa){
     }
 }
 
+
+/*----------------------------------- FUNCIONES DE LIBERACION DE MEMORIA -----------------------------------*/
+/*FUNCION: Libera la memoria de un struct registro*/
+void liberarMemoriaRegistro(struct Registro *registro) {
+    if (registro != NULL) {
+        free(registro->detalle);
+        free(registro->fechaRegistro);
+        free(registro->involucrado);
+        free(registro);
+    }
+}
+
+/*FUNCION: Libera la memoria de una lista simplemente enlazada (Para el Arreglo de registros)*/
+void liberarMemoriaNodoRegistro(struct NodoRegistro *head) {
+    struct NodoRegistro *aux;
+    while (head != NULL) {
+        aux = head;
+        liberarMemoriaRegistro(aux->dataRegistro);
+        free(aux);
+        head = head->sig;
+    }
+}
+
+/*FUNCION: Libera la memoria total de la carpeta investigativa*/
+void liberarMemoriaCarpeta(struct Carpeta *carpeta) {
+    int i, k;
+    if (carpeta != NULL) {
+        /*Liberación de memoria para */
+        for(i = 0 ; i < 5 ; i++) {
+            liberarMemoriaNodoRegistro(carpeta->registros[i]);
+        }
+
+        if (carpeta->imputados != NULL) {
+            for (k = 0 ; k < carpeta->cantImputados ; k++) {
+                free(carpeta->imputados[k]);
+            }
+            free(carpeta->imputados);
+        }
+        free(carpeta);
+    }
+}
+
+/*FUNCION: Libera la memoria total de una Causa*/
+void liberarMemoriaCausa(struct Causa *datos) {
+    if (datos != NULL) {
+        free(datos->ruc);
+        liberarMemoriaRegistro(datos->denunciaInicial);
+        liberarMemoriaCarpeta(datos->investigacion);
+        free(datos);
+    }
+}
+/*----------------------------------------------------------------------------------------------------------*/
+
+/*FUNCION: Eliminar un registro en lista simplemente enlazada*/
+void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegistro) {
+    /*Declaracion de variables*/
+    struct NodoRegistro *rec = (*head), *ant = NULL;
+
+    /*Caso: La lista esta vacia*/
+    if (rec == NULL) {
+        printf("La lista esta vacia.\n");
+        return;
+    }
+    while (rec != NULL) {
+        if (rec->dataRegistro->id == id) {
+            /*Caso: Es el head*/
+            if (ant == NULL) {
+                (*head) = rec->sig;
+            }
+            /*Caso: Está entre medio o al final de la lista*/
+            else {
+                ant->sig = rec->sig;
+            }
+            /*Liberacion de memoria para el registro*/
+            liberarMemoriaRegistro(rec->dataRegistro);
+            printf("La %s (ID %d) fue eliminada exitosamente. \n", nombreTipoRegistro, id);
+            return;
+        }
+        ant = rec;
+        rec =  rec->sig;
+    }
+    printf("La %s (ID %d) no ha sido encontrada.\n", nombreTipoRegistro, id);
+}
+
+/*FUNCION PRINCIPAL DE ELIMINACION: Elimina un registro dado, del arreglo registros
+Recibe el número y el titulo dependiendo de que desea eliminar:
+"0": "Denuncia"
+"1": "Declaracion"
+"2": "Prueba"
+"3": "Diligencia"
+"4": "Resolucion judicial" Pide datos: RUC e ID del registro*/
+void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombreTipoRegistro) {
+    struct NodoCausa *causa = NULL;
+    char rucCausa[15];
+    int idRegistro;
+
+    /*FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC*/
+    printf("Ingrese el RUC de la causa a la que desea eliminar la %s:", nombreTipoRegistro);
+    scanf("%s", rucCausa);
+    printf("Ingrese el ID de la %s a eliminar: ", nombreTipoRegistro);
+    scanf("%d", &idRegistro);
+
+    /*FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL
+      FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL
+      FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL*/
+    if (causa != NULL) {
+        if (causa->datosCausa->investigacion != NULL && causa->datosCausa->investigacion->registros != NULL) {
+            eliminarRegistro(&(causa->datosCausa->investigacion->registros[tipoRegistro]), idRegistro, nombreTipoRegistro);
+        }
+    }
+    else{
+        printf("No se encontro la Causa con RUC %s.\n", rucCausa);
+    }
+}
+
+/*FUNCION: Encuentra el reemplazo para la eliminacion de NodoCausa (ABB) del Caso 3: Nodo con dos hijos*/
+struct NodoCausa* encontrarMinimo(struct NodoCausa* nodo) {
+    while (nodo && nodo->izq != NULL)
+        nodo = nodo->izq;
+    return nodo;
+}
+
+/*FUNCION: Elimina un nodo del ABB*/
+struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa) {
+    struct Causa *datosAEliminar = NULL;
+    struct NodoCausa *aux = NULL;
+    char *rucTemporal;
+    int ruc;
+
+    /*Caso: El arbol esta vacio */
+    if (raiz == NULL) {
+        printf("No se encontro una Causa con ese RUC.\n");
+        return raiz;
+    }
+
+    ruc = strcmp(rucCausa, raiz->datosCausa->ruc);
+
+    /*Buscar el NodoCausa*/
+    if (ruc < 0) {
+        raiz->izq = eliminarCausa(raiz->izq, rucCausa);
+    } else if (ruc > 0) {
+        raiz->der = eliminarCausa(raiz->der, rucCausa);
+    /*El NodoCausa fue encontrado*/
+    } else {
+
+        /*Caso 1: No tiene hijos o solo tiene derecho*/
+        if (raiz->izq == NULL) {
+            aux = raiz->der;
+            printf("Se elimino la Causa con RUC %s.\n", rucCausa);
+            liberarMemoriaCausa(raiz->datosCausa);
+            free(raiz);
+            return aux;
+        /*Caso 2: Solo tiene el hijo izquierdo*/
+        } else if (raiz->der == NULL) {
+            aux = raiz->izq;
+            printf("Se elimino la Causa con RUC %s.\n", rucCausa);
+            liberarMemoriaCausa(raiz->datosCausa);
+            free(raiz);
+            return aux;
+        }
+    /*Caso 3: Tiene los dos hijos, izquierda y derecha*/
+        aux = encontrarMinimo(raiz->der);
+
+        datosAEliminar = raiz->datosCausa;
+        raiz->datosCausa = aux->datosCausa;
+        aux->datosCausa = datosAEliminar;
+
+        raiz->der = eliminarCausa(raiz->der, aux->datosCausa->ruc);
+    }
+    return raiz;
+}
+
+/*FUNCION PRINCIPAL DE ELIMINACION: Elimina una Causa, pide datos: RUC, lo busca y lo elimina*/
+void eliminarCausaEnArbol(struct SIAU *siau) {
+    /*Declaracion de variables*/
+    char rucCausa[15];
+
+    /*FALTA FUNCION: Comprobar RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC*/
+    printf("Ingrese el RUC de la Causa que desea eliminar.\n");
+    scanf("%s", rucCausa);
+    siau->causas = eliminarCausa(siau->causas, rucCausa);
+}
+
+void compactarArreglo(int pos, char **imputados, int pLibre) {
+    int i;
+    for(i = pos ; i < pLibre - 1 ; i++) {
+        imputados[i] = imputados[i + 1];
+    }
+    imputados[pLibre - 1] = NULL;
+}
+
+/*FUNCION: Elimina el RUT de un imputado en el arreglo Imputados*/
+void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado) {
+    int i;
+    /*Se recorre el arreglo*/
+    for(i = 0 ; i < (*cantImputados) ; i++) {
+        if (strcmp(imputados[i], rutImputado) == 0) {
+            free(imputados[i]);
+            /*Se compacta el arreglo y se decrementa el pLibre*/
+            compactarArreglo(i, imputados, (*cantImputados));
+            (*cantImputados)--;
+            printf("Se elimino el Imputado de RUT %s.\n", rutImputado);
+            return;
+        }
+    }
+    printf("No se encontro Imputado con RUT %s.\n", rutImputado);
+    return;
+}
+
+/*FUNCION PRINCIPAL DE ELIMINACION: Elimina un imputado de una Causa. Pide datos: RUC y RUT*/
+void eliminarImputadoDeCausa(struct SIAU *siau) {
+    struct Causa *causa = NULL;
+    char rutImputado[14], rucCausa[16];
+    int i;
+
+    /*FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC
+      FALTA FUNCION: Comprobar RUT, RUC, si no es valido que vuelta a intentar ingresar RUT, RUC*/
+    printf("Ingrese el RUC de la causa a la que desea eliminar el imputado: ");
+    scanf("%s", rucCausa);
+    printf("Ingrese el RUT del imputado a eliminar: ");
+    scanf("%s", rutImputado);
+
+    /*FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL
+      FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL
+      FALTA FUNCION: Buscar Causa, retorna la Causa si la encuentra, y si no NULL*/
+    if (causa != NULL) {
+        if (causa->investigacion->imputados != NULL) {
+            eliminarImputado(causa->investigacion->imputados, &causa->investigacion->cantImputados, rutImputado);
+        }
+    }
+    else {
+        printf("No se encontro la Causa con RUC %s.\n", rucCausa);
+    }
+}
+
+
 /*Funcion leerOpcion: Encargada de leer una opcion para un menu con cierta cantidad de opciones.
  Recibe por parametros una variable donde se leera la opcion, y dos limites(uno inferior y
  otro superior), los cuales permiten validar que el usuario ingrese una opcion dentro del
@@ -493,29 +734,36 @@ void borrarDatos(struct SIAU * siau) {
 
             case 1:
                 /*  Borrar causa*/
+                    eliminarCausaEnArbol(siau);
                 break;
 
             case 2:
                 /*Borrar denuncia en carpeta*/
+                    eliminarRegistroEnArreglo(siau, 0, "Denuncia");
                 break;
 
             case 3:
                 /*Borrar declaracion en carpeta*/
+                    eliminarRegistroEnArreglo(siau, 1, "Declaracion");
                 break;
 
             case 4:
                 /*Borrar prueba en carpeta*/
+                    eliminarRegistroEnArreglo(siau, 2, "Prueba");
                 break;
 
             case 5:
                 /*Borrar diligencia en carpeta*/
+                    eliminarRegistroEnArreglo(siau, 3, "Diligencia");
                 break;
 
             case 6:
                 /*Borrar resolucion judicial en carpeta*/
+                    eliminarRegistroEnArreglo(siau, 4, "Resolucion judicial");
                 break;
             case 7:
                 /*Borrar imputado en carpeta*/
+                    eliminarImputadoDeCausa(siau);
                 break;
             case 8:
                 /*Volver atras*/
