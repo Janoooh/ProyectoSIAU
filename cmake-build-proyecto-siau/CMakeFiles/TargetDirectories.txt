@@ -1,0 +1,3 @@
+C:/ProyectoSIAU/cmake-build-proyecto-siau/CMakeFiles/ProyectoSIAU.dir
+C:/ProyectoSIAU/cmake-build-proyecto-siau/CMakeFiles/edit_cache.dir
+C:/ProyectoSIAU/cmake-build-proyecto-siau/CMakeFiles/rebuild_cache.dir
