@@ -437,7 +437,7 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
         printf("No se encontro la Causa con RUC %s.\n", rucCausa);
     }
 }
-
+/*-------------------------------------------------------------------------
 /*Función para  buscar una causa dado o entregado un ruc en especifico*/
 struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
 {
@@ -491,6 +491,7 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
     }
     return NULL;
 }
+//-----------------------------------------------------------------------------------------------
 
 /*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
 de datos correspondiente para que se llenen los campos. Recibe por parametro el
