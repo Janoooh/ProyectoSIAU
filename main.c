@@ -701,34 +701,39 @@ void buscarDatos(struct SIAU * siau) {
 
             case 1:
                 /*Buscar causa por RUC*/
-
-
+                    buscarCausaPorRuc(siau->causas, rucBuscado);
                 break;
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
+                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
 
                 break;
 
             case 3:
                 /*Buscar declaracion en carpeta por id*/
+                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
 
                 break;
 
             case 4:
                 /*Buscar prueba en carpeta por id*/
+                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
 
                 break;
 
             case 5:
                 /*Buscar diligencia en carpeta por id*/
+                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
                 break;
 
             case 6:
                 /*Buscar resolucion judicial en carpeta por id*/
+                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
                 break;
             case 7:
                 /*Buscar imputado por RUT*/
+                    buscarImputadoEnCarpeta(siau->causas->datosCausa->investigacion,rutBuscado);
                 break;
 
             case 8:
