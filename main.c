@@ -460,7 +460,7 @@ struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
 }
 
 /*Función para buscarRegistro en la carpeta dado un ID, de diferente tipo, ya sea 1, 2 ,3 ó 4 */
-struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int id)
+struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro)
 {
     if (carpeta == NULL || tipo < 0 || tipo > 4)
         return NULL;
@@ -468,7 +468,7 @@ struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int id)
 
     while (actual != NULL)
     {
-        if (actual->dataRegistro != NULL && actual->dataRegistro->id == id)
+        if (actual->dataRegistro != NULL && actual->dataRegistro->id == idRegistro)
             return actual->dataRegistro;
 
         actual = actual->sig;
@@ -493,6 +493,49 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 }
 //-----------------------------------------------------------------------------------------------
 
+/* aquí estan las 2 pincipales funciones extras que son las que se complementan con el codigo de
+ imprimir Causas e imprimir Registros
+*/
+
+// Mostrar Causas por estado
+void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado)// 1,2,3 o 4
+{
+    if (raiz == NULL) return;
+    //1.- Se recorre el subArbol izquierdo
+    mostrarCausasPorEstado(raiz->izq, estado);
+
+    // si el estado es igual, imprimimos la causa usando la función de imprimir causa
+    if (raiz->datosCausa != NULL && raiz->datosCausa->estado == estado)
+    {
+        // falta implementar la función
+        imprimirCausa(raiz->datosCausa);
+    }
+
+    // Recorre a la derecha
+    mostrarCausasPorEstado(raiz->der, estado);
+}
+
+//Mostrar resoluciones judiciales de imputado
+
+void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado)
+{
+    if (carpeta == NULL || imputadoBuscado == NULL) return;
+
+    struct NodoRegistro * actual = carpeta->registros[4];
+
+    while (actual != NULL)
+    {
+        // compara si existe el imputado y si lo está lo imprime
+        if (actual->dataRegistro->involucrado != NULL && strcmp(actual->dataRegistro->involucrado, imputadoBuscado) == 0)
+        {
+            // falta implementar la función
+            imprimirRegistro(actual->dataRegistro);
+        }
+        actual = actual->sig;
+    }
+
+}
+// ----------------------------------------------------------------------------------
 /*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
 de datos correspondiente para que se llenen los campos. Recibe por parametro el
 tipo de registro que se desea crear. Retorna el nuevo registro creado.*/
@@ -680,7 +723,7 @@ void listarDatos(struct SIAU * siau) {
 
 /*Funcion buscarDatos: Menu donde se encuentran las opciones para buscar datos
 en un SIAU. Recibe por parametro una estructura SIAU.*/
-void buscarDatos(struct SIAU * siau) {
+void buscarDatos(struct SIAU * siau, int tipo, int id, char * rucBuscado, char * rutBuscado) {
     int opcion = 0;
     while(opcion != 8){
         limpiarConsola();
@@ -699,7 +742,7 @@ void buscarDatos(struct SIAU * siau) {
         leerOpcion(&opcion,1,9);
         printf("\n");
         switch(opcion){
-
+            // falta mandar como parametro el rucBuscado
             case 1:
                 /*Buscar causa por RUC*/
                     buscarCausaPorRuc(siau->causas, rucBuscado);
@@ -707,6 +750,7 @@ void buscarDatos(struct SIAU * siau) {
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
+                    // faltaria el número del arreglo y el id del registro para cada caso correspondiente
                     buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
 
                 break;
@@ -878,7 +922,7 @@ void borrarDatos(struct SIAU * siau) {
 
 /*Funcion otrasOpciones: Menu donde se encuentran opciones varias.
 Recibe por parametro una estructura SIAU.*/
-void otrasOpciones(struct SIAU * siau) {
+void otrasOpciones(struct SIAU * siau, int estado) {
     int opcion = 0;
     while(opcion != 7){
         limpiarConsola();
@@ -898,7 +942,10 @@ void otrasOpciones(struct SIAU * siau) {
         switch(opcion){
 
             case 1:
+
                 /*  Mostrar causas*/
+                    //faltaria pasar el estado según el estado
+                    mostrarCausasPorEstado(siau->causas,estado)
                 break;
 
             case 2:
