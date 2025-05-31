@@ -438,6 +438,59 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
     }
 }
 
+/*Función para  buscar una causa dado o entregado un ruc en especifico*/
+struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
+{
+    struct Causa * causaBuscada;
+    if (causas == NULL)return NULL;
+
+    if (strcmp(ruc, causas->datosCausa->ruc) == 0)
+    {
+        return causas->datosCausa;
+    }
+    else if (strcmp(ruc,causas->datosCausa->ruc ) < 0 )
+    {
+        return buscarCausaPorRuc(causas->izq, ruc);
+    }
+    else
+    {
+        return buscarCausaPorRuc(causas->der, ruc);
+    }
+    return NULL;
+}
+
+/*Función para buscarRegistro en la carpeta dado un ID, de diferente tipo, ya sea 1, 2 ,3 ó 4 */
+struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int id)
+{
+    if (carpeta == NULL || tipo < 0 || tipo > 4)
+        return NULL;
+    struct NodoRegistro * actual = carpeta->registros[tipo];
+
+    while (actual != NULL)
+    {
+        if (actual->dataRegistro != NULL && actual->dataRegistro->id == id)
+            return actual->dataRegistro;
+
+        actual = actual->sig;
+    }
+    return NULL;
+}
+/*Función que busca un imputado en base al rut  entregado*/
+char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
+{
+    int i;
+    if (rutBuscado == NULL)
+        return NULL;
+
+    for (i = 0; i < carpeta->cantImputados;i++)
+    {
+        if (carpeta->imputados[i] != NULL && strcmp(rutBuscado, carpeta->imputados[i]) == 0)
+        {
+            return carpeta->imputados[i];
+        }
+    }
+    return NULL;
+}
 
 /*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
 de datos correspondiente para que se llenen los campos. Recibe por parametro el
@@ -648,18 +701,23 @@ void buscarDatos(struct SIAU * siau) {
 
             case 1:
                 /*Buscar causa por RUC*/
+
+
                 break;
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
+
                 break;
 
             case 3:
                 /*Buscar declaracion en carpeta por id*/
+
                 break;
 
             case 4:
                 /*Buscar prueba en carpeta por id*/
+
                 break;
 
             case 5:
