@@ -198,6 +198,113 @@ int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa){
     }
 }
 
+/*----------------------------------------------------------------------------------------------------------*/
+/*---------------------------- FUNCIONES RELACIONADA CON LISTADO E IMPRESION -------------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
+
+/*Funcion que imprime el rut de un imputado, toma con parametro al imputado*/
+void imprimirImputado(char *imputado) {
+    printf("Rut del imputado : %s\n", imputado);
+}
+
+/*Funcion que imprime un registro con un formato, recibe como parametro un registro*/
+void imprimirRegistro(struct Registro *registro) {
+    printf("===========================================================\n");
+    printf(" ID : %i\n", registro->id);
+    switch (registro->tipo) {
+        default:
+            printf(" Tipo : Denuncia\n");
+        case 1:
+            printf(" Tipo : Declaracion\n");
+        case 2:
+            printf(" Tipo : Prueba\n");
+        case 3:
+            printf(" Tipo : Diligencia\n");
+        case 4:
+            printf(" Tipo : Resolucion Judicial\n");
+    }
+    printf(" Fecha: %s", registro->fechaRegistro);
+    printf(" ----------------------------------------------------------\n");
+    printf(" Involucrado : \n");
+    if (registro->involucrado != NULL) {
+        printf("  %s\n", registro->involucrado);
+    }
+    printf(" ----------------------------------------------------------\n");
+    printf(" Detalle:\n");
+    printf("   %s\n", registro->detalle);
+    printf("===========================================================\n");
+}
+
+/*Funcion que recibe una causa e imprime su ruc, estado y la denuncia inicial (llamando a la funcion para imprimir registro)*/
+void imprimirCausa(struct Causa *causa) {
+    printf(" --------------------------------------------------------- \n");
+    printf("| Ruc : %s       | Estado : ", causa->ruc);
+    switch (causa->estado) {
+        case 0:
+            printf("Abierta           |\n");
+        case 1:
+            printf("Cerrada           |\n");
+        case 2:
+            printf("Archivada         |\n");
+        case 3:
+            printf("En juicio         |\n");
+    }
+    printf(" --------------------------------------------------------- \n");
+    imprimirRegistro(causa->denunciaInicial);
+    printf("\n");
+}
+
+/*Funcion que recorre un arreglo de imputados y llama a la funcion para imprimirlos*/
+void recorrerImputados(char **imputados, int cantidad) {
+    int i;
+    for (i = 0 ; i < cantidad ; i ++) {
+        imprimirImputado(imputados[i]);
+    }
+}
+
+/*Funcion que recorre una lista de registros y llama a la funcion para imprimir cada uno de ellos*/
+void recorrerRegistrosParaImprimirlos(struct NodoRegistro *listaRegistros) {
+    if (listaRegistros == NULL)
+        printf("No hay registros\n");
+    while (listaRegistros != NULL) {
+        /*llamada a la funcion para imprimir el registro*/
+        imprimirRegistro(listaRegistros->dataRegistro);
+        listaRegistros = listaRegistros->sig;
+    }
+}
+
+/*Funcion recursiva que recorre el arbol de causas en orden y que llama a otra funcion para imprimir el contenido*/
+void recorrerCausasParaImprimirlas(struct NodoCausa *actual) {
+    if (actual != NULL) {
+        recorrerCausasParaImprimirlas(actual->izq);
+        /*llamada a la funcion para imprimir los datos*/
+        imprimirCausa(actual->datosCausa);
+        recorrerCausasParaImprimirlas(actual->der);
+    }
+    return;
+}
+
+/*Funcion que recibe una carpeta y un parametro que es el indice del arreglo de nodos*/
+void listarCarpetas(struct Carpeta *carpeta, int parametro) {
+    if (carpeta != NULL) {
+        /*Pregunta si el parametro es un indice del arreglo de nodos*/
+        if (parametro >= 0 && parametro <= 4) {
+            /* Si es un indice, se lo pasa a la funcion para recorrer la lista correspondiente a ese indice*/
+            recorrerRegistrosParaImprimirlos(carpeta->registros[parametro]);
+        }
+        /* Si no es un indice, entonces significa que se quiere imprimir los imputados*/
+        else {
+            /* Si en la carpeta los imputados son mayores que cero se llama a la funcion para recorrer el arreglo*/
+            if (carpeta->cantImputados > 0)
+                recorrerImputados(carpeta->imputados, carpeta->cantImputados);
+            else
+                printf("No hay imputados para mostrar\n"); /*En caso de los imputados sean cero*/
+        }
+    }
+    else
+        printf("La carpeta no existe\n"); /*En caso de la carpeta no exista*/
+}
+/*----------------------------------------------------------------------------------------------------------*/
 
 /*----------------------------------- FUNCIONES DE LIBERACION DE MEMORIA -----------------------------------*/
 /*FUNCION: Libera la memoria de un struct registro*/
@@ -661,65 +768,107 @@ void agregarDatos(struct SIAU *siau){
     }
 }
 
-/*Funcion listarDatos: Menu donde se encuentran las opciones para listar datos
-de un SIAU. Recibe por parametro una estructura SIAU.*/
-void listarDatos(struct SIAU * siau) {
-    int opcion = 0;
-    while(opcion != 8){
-        /*limpiarConsola();*/
-        printf("===========================================================\n");
-        printf("=======================Listar Datos========================\n");
-        printf("===========================================================\n");
-        printf("1- Listar Causas.\n");
-        printf("2- Listar denuncias en carpeta.\n");
-        printf("3- Listar declaraciones en carpeta.\n");
-        printf("4- Listar pruebas en carpeta.\n");
-        printf("5- Listar diligencias en carpeta.\n");
-        printf("6- Listar resoluciones judiciales en carpeta.\n");
-        printf("7- Listar imputados en carpeta.\n");
-        printf("8- Volver atras.\n");
-        printf("Ingrese una opcion:");
-        leerOpcion(&opcion,1,8);
-        printf("\n");
-        switch(opcion){
 
+/*-------------------------------------------------------------------------------------------------*/
+/*Funcion listarDatos y listarDatosCarpeta: Menus donde se encuentran las opciones para listar datos
+de un SIAU. */
+void listarDatosCarpeta(struct Carpeta *carpeta) {
+    int opcion = 0;
+    while(opcion != 7){
+        limpiarConsola();
+        printf("-----------------------------------------------------------\n");
+        printf("                  Listar Datos en Carpeta                  \n");
+        printf("-----------------------------------------------------------\n");
+        printf("1- Listar denuncias en carpeta.\n");
+        printf("2- Listar declaraciones en carpeta.\n");
+        printf("3- Listar pruebas en carpeta.\n");
+        printf("4- Listar diligencias en carpeta.\n");
+        printf("5- Listar resoluciones judiciales en carpeta.\n");
+        printf("6- Listar imputados en carpeta.\n");
+        printf("7- Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,7);
+        switch(opcion){
             case 1:
-                /*  Listar causas*/
+                /*llamada a la funcion para imprimir los datos de la carpeta*/
+                listarCarpetas(carpeta, 0);
                 break;
 
             case 2:
-                /*Listar denuncias en carpeta*/
+                listarCarpetas(carpeta, 1);
                 break;
 
             case 3:
-                /*Listar declaraciones en carpeta*/
+                listarCarpetas(carpeta, 2);
                 break;
 
             case 4:
-                /*Listar pruebas en carpeta*/
+                listarCarpetas(carpeta, 3);
                 break;
 
             case 5:
-                /*Listar diligencias en carpeta*/
+                listarCarpetas(carpeta, 4);
                 break;
 
             case 6:
-                /*Listar resoluciones judiciales en carpeta*/
+                listarCarpetas(carpeta, 5);
                 break;
+
             case 7:
-                /*Listar imputados en carpeta*/
-                break;
-            case 8:
-                /*Volver atras*/
+
                 return;
 
-
             default:
-                printf("Error.");
+                printf("Error.\n");
         }
     }
     return;
 }
+
+void listarDatos(struct SIAU *siau) {
+    int opcion = 0;
+    struct Causa * causaBuscada;
+    while(opcion != 3) {
+        limpiarConsola();
+        printf("===========================================================\n");
+        printf("=======================Listar Datos========================\n");
+        printf("===========================================================\n");
+        printf("1- Listar Causas.\n");
+        printf("2- Listar datos en carpeta.\n");
+        printf("3- Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,3);
+        switch(opcion) {
+            case 1:
+                    /*Caso que quiera listar todas las causas del sistema*/
+                    /*Pregunta si hay causas en el sistema, si las hay llama a la funcion para recorrer */
+                    if (siau->cantCausas > 0)
+                        recorrerCausasParaImprimirlas(siau->causas);
+                    else
+                        printf("No hay nada para mostrar\n");
+                    break;
+
+            case 2:
+                    /* Caso de que se quiera listar los datos de la carpeta*/
+                    /* Para ello se busca la causa que tiene la carpeta*/
+                    causaBuscada = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese RUC buscado : "));
+                    /*Si la causa existe se pasa al siguiente menu*/
+                    if (causaBuscada != NULL)
+                        listarDatosCarpeta(causaBuscada->investigacion);
+                    else
+                        printf("No existe\n");
+                    break;
+
+            case 3:
+                return;
+
+            default:
+                printf("Error.\n");
+        }
+    }
+    return;
+}
+/*----------------------------------------------------------------------------------------------*/
 
 /*Funcion buscarDatos: Menu donde se encuentran las opciones para buscar datos
 en un SIAU. Recibe por parametro una estructura SIAU.*/
