@@ -72,6 +72,7 @@ int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa);
 struct Causa * crearCausa();
 struct Registro * crearRegistro(int tipoRegistro);
 int agregarRegistro(struct SIAU *siau, struct Registro *nuevo);
+void codigoAgregarRegistroMenu(struct SIAU *siau, int tipoRegistro);
 int agregarImputado(struct SIAU *siau);
 
 
@@ -304,6 +305,23 @@ int agregarRegistro(struct SIAU *siau, struct Registro *nuevo){
     causaBuscada->investigacion->registros[tipoRegistro] = nuevoNodo;
 
     return 1;/*Se agrego el nuevo registro correctamente.*/
+}
+/*Funcion codigoAgregarRegistroMenu: Funcion para agregar un registro en el menu, funciona
+ como interfaz de mensajes que entrega dependiendo del resultado de la accion que se realizo.
+ Recibe por parametro el siau y el tipo de registro que se quiere agregar.
+ */
+void codigoAgregarRegistroMenu(struct SIAU *siau, int tipoRegistro) {
+    struct Registro *tempRegistro = NULL;
+    int resultadoInstruccion;
+
+    tempRegistro = crearRegistro(tipoRegistro);
+    resultadoInstruccion = agregarRegistro(siau, tempRegistro);
+    if (resultadoInstruccion == 1)
+        printf("El registro se agrego correctamente.");
+    else if (resultadoInstruccion == 0)
+        printf("El registro ya existia en la causa (Mismo id y mismo tipo).");
+    else if (resultadoInstruccion == -1)
+        printf("No se encontro la causa a la cual agregar el registro.");
 }
 
 /*Funcion agregarImputado: Funcion encargada de agregar una cadena que contendra un RUT
@@ -773,7 +791,7 @@ a un SIAU. Recibe por parametro una estructura SIAU.*/
 void agregarDatos(struct SIAU *siau){
     struct Causa *tempCausa;
     struct Registro *tempRegistro;
-    int opcion = 0;
+    int opcion = 0, resultadoInstruccion;
     while(opcion != 8){
         /*limpiarConsola();*/
         printf("===========================================================\n");
@@ -806,29 +824,34 @@ void agregarDatos(struct SIAU *siau){
 
             case 2:
                 /*Agregar denuncia a carpeta*/
-                tempRegistro = crearRegistro(4);
-                if (tempRegistro)printf("Registro creado bien.");
-                else printf("Registro creado mal :(");
+                codigoAgregarRegistroMenu(siau,0);
+
                 break;
 
             case 3:
                 /*Agregar declaracion a carpeta*/
+                codigoAgregarRegistroMenu(siau,1);
                 break;
 
             case 4:
                 /*Agregar prueba a carpeta*/
+                codigoAgregarRegistroMenu(siau,2);
                 break;
 
             case 5:
                 /*Agregar diligencia a carpeta*/
+                codigoAgregarRegistroMenu(siau,3);
                 break;
 
             case 6:
                 /*Agregar resolucion judicial a carpeta*/
+                codigoAgregarRegistroMenu(siau,4);
                 break;
+
             case 7:
                 /*Agregar imputado a carpeta*/
                 break;
+
             case 8:
                 /*Volver atras*/
                 return;
@@ -839,7 +862,6 @@ void agregarDatos(struct SIAU *siau){
         }
     }
 }
-
 
 /*-------------------------------------------------------------------------------------------------*/
 /*Funcion listarDatos y listarDatosCarpeta: Menus donde se encuentran las opciones para listar datos
