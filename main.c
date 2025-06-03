@@ -58,15 +58,38 @@ struct Registro {
 
 void leerOpcion(int *opcion, int limInf, int limSup);
 void limpiarConsola();
+
 void agregarDatos(struct SIAU * siau);
 void listarDatos(struct SIAU * siau);
 void buscarDatos(struct SIAU * siau);
 void modificarDatos(struct SIAU * siau);
 void borrarDatos(struct SIAU * siau);
 void otrasOpciones(struct SIAU * siau);
+
 char * leerCadena(char *mensaje);
+
 int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa);
 struct Causa * crearCausa();
+struct Registro * crearRegistro(int tipoRegistro);
+int agregarRegistro(struct SIAU *siau, struct Registro *nuevo);
+int agregarImputado(struct SIAU *siau);
+
+
+void imprimirImputado(char *imputado);
+void imprimirRegistro(struct Registro *registro);
+void imprimirCausa(struct Causa *causa);
+void recorrerImputados(char **imputados, int cantidad); /*Cambiar por recorrerImprimirImputados en vez de recorrer?*/
+void recorrerRegistrosParaImprimirlos(struct NodoRegistro *listaRegistros);
+void recorrerCausasParaImprimirlas(struct NodoCausa *actual);
+void listarCarpetas(struct Carpeta *carpeta, int parametro);
+void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado);/*Func Otras Opc.*/
+void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado);/*Func Otras Opc.*/
+
+struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc);
+struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro);
+char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado);
+
+
 
 void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegistro);
 void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombreTipoRegistro);
@@ -75,6 +98,12 @@ struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa);
 void eliminarCausaEnArbol(struct SIAU *siau);
 void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado);
 void eliminarImputadoDeCausa(struct SIAU *siau);
+
+
+
+/*----------------------------------------------------------------------------------------------------------*/
+/*-------------------------- FUNCIONES RELACIONADA CON AGREGAR Y CREAR DATOS -------------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
 
 /*Funcion leerCadena: Encargada de leer una cadena de texto ingresada por el usuario. Lo leido
 se almacena en un buffer temporal, para despues traspasarlo a una nueva cadena dinamica, reservandole
@@ -105,6 +134,7 @@ char * leerCadena(char *mensaje){
  a la Causa creada, rellena con los datos ingresados por el usuario.*/
 struct Causa * crearCausa(){
     struct Causa *nueva = NULL;
+    int x;
 
     /*Primero reservaremos memoria, y colocaremos los valores default para ciertas
     variables.*/
@@ -123,6 +153,9 @@ struct Causa * crearCausa(){
 
     /*Reservamos memoria para la carpeta investigativa de la Causa.*/
     nueva->investigacion = (struct Carpeta *) malloc(sizeof(struct Carpeta));
+
+    /*Apuntamos los punteros del arreglo de listas a NULL, para que quede limpio.*/
+    for (x = 0; x < 5; x++) nueva->investigacion->registros[x] = NULL;
 
     /*Reservamos memoria para el arreglo de imputados de la carpeta.*/
     nueva->investigacion->imputados = (char **) malloc(MAX_IMPUTADOS * sizeof(char *));
@@ -206,6 +239,107 @@ int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa){
     }
 }
 
+/*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
+de datos correspondiente para que se llenen los campos. Recibe por parametro el
+tipo de registro que se desea crear. Retorna el nuevo registro creado.*/
+struct Registro * crearRegistro(int tipoRegistro){
+    struct Registro *nuevo = NULL;
+    /*Cadenas para indicar correctamente al usuario que ingresar, segun el contexto del tipo de registro*/
+    char *tiposInvolucrado[5] = {"denunciante:","declarante:","investigador:","involucrado:","destinatario de la resolucion:"};
+    char *tiposDetalle[5] = {"la descripcion de la denuncia:","el detalle de la declaracion:","la informacion de la prueba:","el detalle de la diligencia:","el tipo de resolucion judicial:"};
+    char *tiposFecha[5] = {"denuncia:","declaracion:","creacion del registro:","diligencia:","emision de la resolucion judicial:"};
+    char bufferInvolucrado[61] = "Ingrese el RUT del ";
+    char bufferDetalle[61] = "Ingrese ";
+    char bufferFecha[61] = "Ingrese la fecha de la ";
+
+    /*Reserva de memoria para el nuevo registro*/
+    nuevo = (struct Registro *) malloc(sizeof(struct Registro));
+
+    printf("Ingrese el id del registro:");
+    scanf("%d",&(nuevo->id));
+
+    nuevo->involucrado = leerCadena(strcat(bufferInvolucrado,tiposInvolucrado[tipoRegistro]));
+
+    nuevo->detalle = leerCadena(strcat(bufferDetalle,tiposDetalle[tipoRegistro]));
+
+    nuevo->fechaRegistro = leerCadena(strcat(bufferFecha,tiposFecha[tipoRegistro]));
+
+    nuevo->tipo = tipoRegistro;
+
+    return nuevo;
+
+}
+
+/*Funcion agregarRegistro: Encargada de agregar un registro a una lista enlazada. Recibe por
+parametros la estructura siau, y el registro que se quiere agregar. Primero preguntara al usuario
+en que causa quiere agregar el registro, buscandola en el arbol de causas. Si la encuentra, accedera
+al arreglo estatico de listas de registros, donde segun el tipo que sea el nuevo registro, se insertara
+un nuevo nodo con el registro creado. Retorna un -1 si la causa no existe, un 0 si el registro ya existia,
+y un 1 si se agrego correctamente.*/
+int agregarRegistro(struct SIAU *siau, struct Registro *nuevo){
+    struct Causa *causaBuscada = NULL;
+    struct Registro *registroBuscado = NULL;
+    struct NodoRegistro *nuevoNodo = NULL, *rec = NULL;
+    char *rucBuscado = NULL;
+    int tipoRegistro;
+
+    rucBuscado = leerCadena("Ingrese el RUC de la causa a la que quiere acceder:");
+    causaBuscada = buscarCausaPorRuc(siau->causas,rucBuscado);
+
+    if(causaBuscada == NULL)
+        return -1;/*La causa no existe.*/
+
+    registroBuscado = buscarRegistroPorId(causaBuscada->investigacion , nuevo->tipo, nuevo->id);
+
+    if(registroBuscado != NULL)
+        return 0;/*El registro nuevo ya existe.*/
+
+    nuevoNodo = (struct NodoRegistro *) malloc(sizeof(struct NodoRegistro));
+    nuevoNodo->dataRegistro = nuevo;
+    nuevoNodo->sig = NULL;
+
+    tipoRegistro = nuevo->tipo;
+
+    nuevoNodo->sig = causaBuscada->investigacion->registros[tipoRegistro];
+    causaBuscada->investigacion->registros[tipoRegistro] = nuevoNodo;
+
+    return 1;/*Se agrego el nuevo registro correctamente.*/
+}
+
+/*Funcion agregarImputado: Funcion encargada de agregar una cadena que contendra un RUT
+leido, en el arreglo de cadenas de alguna carpeta. Primero busca la causa a la cual se le agregara
+el imputado, si la encuentra, buscara el rut nuevo en el arreglo, para evitar duplicados. Recibe
+por parametro la estructura siau, y retorna -2 si la causa no existia, -1 si el imputado ya existia
+en el arreglo, 0 si no queda espacio para agregar, y 1 si se agrego correctamente.*/
+int agregarImputado(struct SIAU *siau){
+    struct Causa *causaBuscada = NULL;
+    char *nuevoImputado = NULL, *rucBuscado = NULL, *imputadoBuscado = NULL;
+    int pLibre;
+
+    rucBuscado = leerCadena("Ingrese el RUC de la causa a la que quiere acceder:");
+    causaBuscada = buscarCausaPorRuc(siau->causas, rucBuscado);
+
+    if(causaBuscada == NULL)
+        return -2;/*No existe la causa*/
+
+    nuevoImputado = leerCadena("Ingrese el RUT del nuevo imputado:");
+
+    imputadoBuscado = buscarImputadoEnCarpeta(causaBuscada->investigacion, nuevoImputado);
+
+    if(imputadoBuscado != NULL)
+        return -1;/*El imputado ya existe en el arreglo*/
+
+    pLibre = causaBuscada->investigacion->cantImputados;
+    if(pLibre < MAX_IMPUTADOS){
+        causaBuscada->investigacion->imputados[pLibre] = nuevoImputado;
+        causaBuscada->investigacion->cantImputados += 1;
+        return 1;/*imputado agregado correctamente.*/
+    }
+
+    return 0;/*No hay mas espacio para imputados*/
+
+}
+
 /*----------------------------------------------------------------------------------------------------------*/
 /*---------------------------- FUNCIONES RELACIONADA CON LISTADO E IMPRESION -------------------------------*/
 /*----------------------------------------------------------------------------------------------------------*/
@@ -222,14 +356,19 @@ void imprimirRegistro(struct Registro *registro) {
     switch (registro->tipo) {
         default:
             printf(" Tipo : Denuncia\n");
+            break;
         case 1:
             printf(" Tipo : Declaracion\n");
+            break;
         case 2:
             printf(" Tipo : Prueba\n");
+            break;
         case 3:
             printf(" Tipo : Diligencia\n");
+            break;
         case 4:
             printf(" Tipo : Resolucion Judicial\n");
+            break;
     }
     printf(" Fecha: %s", registro->fechaRegistro);
     printf(" ----------------------------------------------------------\n");
@@ -250,12 +389,16 @@ void imprimirCausa(struct Causa *causa) {
     switch (causa->estado) {
         case 0:
             printf("Abierta           |\n");
+            break;
         case 1:
             printf("Cerrada           |\n");
+            break;
         case 2:
             printf("Archivada         |\n");
+            break;
         case 3:
             printf("En juicio         |\n");
+            break;
     }
     printf(" --------------------------------------------------------- \n");
     imprimirRegistro(causa->denunciaInicial);
@@ -294,7 +437,7 @@ void recorrerCausasParaImprimirlas(struct NodoCausa *actual) {
 
 /*Funcion que recibe una carpeta y un parametro que es el indice del arreglo de nodos*/
 void listarCarpetas(struct Carpeta *carpeta, int parametro) {
-    if (carpeta != NULL) {
+    if (carpeta != NULL) {/*Necesaria la condicion??*/
         /*Pregunta si el parametro es un indice del arreglo de nodos*/
         if (parametro >= 0 && parametro <= 4) {
             /* Si es un indice, se lo pasa a la funcion para recorrer la lista correspondiente a ese indice*/
@@ -312,7 +455,56 @@ void listarCarpetas(struct Carpeta *carpeta, int parametro) {
     else
         printf("La carpeta no existe\n"); /*En caso de la carpeta no exista*/
 }
+
+/* aquí estan las 2 pincipales funciones extras que son las que se complementan con el codigo de
+ imprimir Causas e imprimir Registros
+*/
+
+// Mostrar Causas por estado
+void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado)// 1,2,3 o 4
+{
+    if (raiz == NULL) return;
+    //1.- Se recorre el subArbol izquierdo
+    mostrarCausasPorEstado(raiz->izq, estado);
+
+    // si el estado es igual, imprimimos la causa usando la función de imprimir causa
+    if (raiz->datosCausa != NULL && raiz->datosCausa->estado == estado)
+    {
+        // falta implementar la función
+        imprimirCausa(raiz->datosCausa);
+    }
+
+    // Recorre a la derecha
+    mostrarCausasPorEstado(raiz->der, estado);
+}
+
+//Mostrar resoluciones judiciales de imputado
+
+void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado)
+{
+    if (carpeta == NULL || imputadoBuscado == NULL) return;
+
+    struct NodoRegistro * actual = carpeta->registros[4];
+
+    while (actual != NULL)
+    {
+        // compara si existe el imputado y si lo está lo imprime
+        if (actual->dataRegistro->involucrado != NULL && strcmp(actual->dataRegistro->involucrado, imputadoBuscado) == 0)
+        {
+            // falta implementar la función
+            imprimirRegistro(actual->dataRegistro);
+        }
+        actual = actual->sig;
+    }
+
+}
+
+
+
 /*----------------------------------------------------------------------------------------------------------*/
+/*----------------------- FUNCIONES RELACIONADAS CON BUSCAR UN DATO ESPECIFICO -----------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
+
 
 /*Función para  buscar una causa dado o entregado un ruc en especifico*/
 struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
@@ -369,50 +561,11 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 }
 //-----------------------------------------------------------------------------------------------
 
-/* aquí estan las 2 pincipales funciones extras que son las que se complementan con el codigo de
- imprimir Causas e imprimir Registros
-*/
 
-// Mostrar Causas por estado
-void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado)// 1,2,3 o 4
-{
-    if (raiz == NULL) return;
-    //1.- Se recorre el subArbol izquierdo
-    mostrarCausasPorEstado(raiz->izq, estado);
+/*----------------------------------------------------------------------------------------------------------*/
+/*------------------------ FUNCIONES RELACIONADAS CON ELIMINAR DATOS ESPECIFICOS----------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
 
-    // si el estado es igual, imprimimos la causa usando la función de imprimir causa
-    if (raiz->datosCausa != NULL && raiz->datosCausa->estado == estado)
-    {
-        // falta implementar la función
-        imprimirCausa(raiz->datosCausa);
-    }
-
-    // Recorre a la derecha
-    mostrarCausasPorEstado(raiz->der, estado);
-}
-
-//Mostrar resoluciones judiciales de imputado
-
-void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado)
-{
-    if (carpeta == NULL || imputadoBuscado == NULL) return;
-
-    struct NodoRegistro * actual = carpeta->registros[4];
-
-    while (actual != NULL)
-    {
-        // compara si existe el imputado y si lo está lo imprime
-        if (actual->dataRegistro->involucrado != NULL && strcmp(actual->dataRegistro->involucrado, imputadoBuscado) == 0)
-        {
-            // falta implementar la función
-            imprimirRegistro(actual->dataRegistro);
-        }
-        actual = actual->sig;
-    }
-
-}
-
-/*-----------------------------------------------  FUNCIONES DE ELIMINACION  -------------------------------------------------------*/
 
 /*FUNCION: Eliminar un registro en lista simplemente enlazada*/
 void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegistro) {
@@ -590,36 +743,7 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
 }
 
 // ----------------------------------------------------------------------------------
-/*Funcion crearRegistro: Encargada de crear un registro, incluyendo la lectura
-de datos correspondiente para que se llenen los campos. Recibe por parametro el
-tipo de registro que se desea crear. Retorna el nuevo registro creado.*/
-struct Registro * crearRegistro(int tipoRegistro){
-    struct Registro *nuevo = NULL;
-    /*Cadenas para indicar correctamente al usuario que ingresar, segun el contexto del tipo de registro*/
-    char *tiposInvolucrado[5] = {"denunciante:","declarante:","investigador:","involucrado:","destinatario de la resolucion:"};
-    char *tiposDetalle[5] = {"la descripcion de la denuncia:","el detalle de la declaracion:","la informacion de la prueba:","el detalle de la diligencia:","el tipo de resolucion judicial:"};
-    char *tiposFecha[5] = {"denuncia:","declaracion:","creacion del registro:","diligencia:","emision de la resolucion judicial:"};
-    char bufferInvolucrado[51] = "Ingrese el RUT del ";
-    char bufferDetalle[51] = "Ingrese ";
-    char bufferFecha[51] = "Ingrese la fecha de la ";
 
-    /*Reserva de memoria para el nuevo registro*/
-    nuevo = (struct Registro *) malloc(sizeof(struct Registro));
-
-    printf("Ingrese el id del registro:");
-    scanf("%d",&(nuevo->id));
-
-    nuevo->involucrado = leerCadena(strcat(bufferInvolucrado,tiposInvolucrado[tipoRegistro]));
-
-    nuevo->detalle = leerCadena(strcat(bufferDetalle,tiposDetalle[tipoRegistro]));
-
-    nuevo->fechaRegistro = leerCadena(strcat(bufferFecha,tiposFecha[tipoRegistro]));
-
-    nuevo->tipo = tipoRegistro;
-
-    return nuevo;
-
-}
 
 /*Funcion leerOpcion: Encargada de leer una opcion para un menu con cierta cantidad de opciones.
  Recibe por parametros una variable donde se leera la opcion, y dos limites(uno inferior y
@@ -637,9 +761,10 @@ void leerOpcion(int *opcion, int limInf, int limSup){
 /*Funcion limpiarConsola: Encargada de imprimir multiples saltos de linea para hacer
  mas atractivo a la vista el programa en consola.*/
 void limpiarConsola() {
+    /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
+    printf("\n\n");
 
 }
 
@@ -819,7 +944,7 @@ void listarDatos(struct SIAU *siau) {
 
 /*Funcion buscarDatos: Menu donde se encuentran las opciones para buscar datos
 en un SIAU. Recibe por parametro una estructura SIAU.*/
-void buscarDatos(struct SIAU * siau, int tipo, int id, char * rucBuscado, char * rutBuscado) {
+void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char * rutBuscado*/) {
     int opcion = 0;
     while(opcion != 8){
         limpiarConsola();
@@ -841,40 +966,40 @@ void buscarDatos(struct SIAU * siau, int tipo, int id, char * rucBuscado, char *
             // falta mandar como parametro el rucBuscado
             case 1:
                 /*Buscar causa por RUC*/
-                    buscarCausaPorRuc(siau->causas, rucBuscado);
+                    /*buscarCausaPorRuc(siau->causas, rucBuscado);*/
                 break;
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
                     // faltaria el número del arreglo y el id del registro para cada caso correspondiente
-                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
+                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
 
                 break;
 
             case 3:
                 /*Buscar declaracion en carpeta por id*/
-                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
+                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
 
                 break;
 
             case 4:
                 /*Buscar prueba en carpeta por id*/
-                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
+                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
 
                 break;
 
             case 5:
                 /*Buscar diligencia en carpeta por id*/
-                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
+                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
                 break;
 
             case 6:
                 /*Buscar resolucion judicial en carpeta por id*/
-                    buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);
+                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
                 break;
             case 7:
                 /*Buscar imputado por RUT*/
-                    buscarImputadoEnCarpeta(siau->causas->datosCausa->investigacion,rutBuscado);
+                    /*buscarImputadoEnCarpeta(siau->causas->datosCausa->investigacion,rutBuscado);*/
                 break;
 
             case 8:
@@ -1018,7 +1143,7 @@ void borrarDatos(struct SIAU * siau) {
 
 /*Funcion otrasOpciones: Menu donde se encuentran opciones varias.
 Recibe por parametro una estructura SIAU.*/
-void otrasOpciones(struct SIAU * siau, int estado) {
+void otrasOpciones(struct SIAU * siau/*, int estado*/) {
     int opcion = 0;
     while(opcion != 7){
         limpiarConsola();
@@ -1041,7 +1166,7 @@ void otrasOpciones(struct SIAU * siau, int estado) {
 
                 /*  Mostrar causas*/
                     //faltaria pasar el estado según el estado
-                    mostrarCausasPorEstado(siau->causas,estado)
+                    /*mostrarCausasPorEstado(siau->causas,estado);*/
                 break;
 
             case 2:
