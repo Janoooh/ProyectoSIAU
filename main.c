@@ -271,6 +271,19 @@ struct Registro * crearRegistro(int tipoRegistro){
 
 }
 
+
+
+
+void agregarRegistroAlista(struct NodoRegistro **lista, struct Registro *registro) {
+    struct NodoRegistro *nuevo;
+    nuevo = (struct NodoRegistro *) malloc(sizeof(struct NodoRegistro));
+    nuevo->dataRegistro = registro;
+    nuevo->sig = NULL;
+
+    nuevo->sig = *lista;
+    *lista = nuevo;
+}
+
 /*Funcion agregarRegistro: Encargada de agregar un registro a una lista enlazada. Recibe por
 parametros la estructura siau, y el registro que se quiere agregar. Primero preguntara al usuario
 en que causa quiere agregar el registro, buscandola en el arbol de causas. Si la encuentra, accedera
@@ -579,6 +592,26 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 }
 //-----------------------------------------------------------------------------------------------
 
+/*----------------------------------------------------------------------------------------------------------*/
+/*------------------------ FUNCIONES RELACIONADAS CON MODIFICAR LOS DATOS ----------------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
+
+/* Funcion que valida la modificacion de un registro, si todo esta bien llama a la funcion de modificar*/
+void validarModificacionRegistros(struct SIAU * siau, int tipo) {
+    struct Causa *causaBuscada;
+    struct Registro *registroBuscado;
+
+    causaBuscada =(siau->causas, leerCadena("Ingrese el RUC de la denuncia a modificar : "));
+    if (buscado != NULL && buscado->investigacion != NULL) {
+        registroBuscado = buscarRegistroPorId(buscado->investigacion, tipo, leerCadena("Ingrese el ID del registro buscado : "));
+        if (registroBuscado != NULL)
+            modificarRegistro(registroBuscado, causaBuscada->investigacion);
+        else
+            printf("No existe ese registro.\n");
+    }
+    else
+        printf("No existe.\n");
+}
 
 /*----------------------------------------------------------------------------------------------------------*/
 /*------------------------ FUNCIONES RELACIONADAS CON ELIMINAR DATOS ESPECIFICOS----------------------------*/
@@ -1036,6 +1069,128 @@ void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char
     return;
 }
 
+/*Funcion modificarTipoRegistro: Menu donde se encuentran las opciones para modificar el 
+ tipo de un registro. Recibe por parametro una estructura Registro y la carpeta que lo contiene.*/
+void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
+    int opcion = 0;
+    while(opcion != 6){
+        limpiarConsola();
+        printf("Seleccione el nuevo tipo del registro\n");
+        printf("-------------------------------------\n");
+        printf("[1] Denuncia.\n");
+        printf("[2] Declaracion.\n");
+        printf("[3] Prueba.\n");
+        printf("[4] Diligencia.\n");
+        printf("[5] Resolucion Judicial.\n");
+        printf("[6] Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,6);
+        switch(opcion){
+            case 1:
+                if (registro->tipo != 0) {
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    registro->tipo = 0;
+                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                }
+                else
+                    printf("El registro ya tiene ese tipo.\n");
+                break;
+
+            case 2:
+                if (registro->tipo != 1) {
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    registro->tipo = 1;
+                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                }
+                else
+                    printf("El registro ya tiene ese tipo.\n");
+                break;
+
+            case 3:
+                if (registro->tipo != 2) {
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    registro->tipo = 2;
+                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                }
+                else
+                    printf("El registro ya tiene ese tipo.\n");
+                break;
+
+            case 4:
+                if (registro->tipo != 3) {
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    registro->tipo = 3;
+                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                }
+                else
+                    printf("El registro ya tiene ese tipo.\n");
+                break;
+
+            case 5:
+                if (registro->tipo != 4) {
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    registro->tipo = 4;
+                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                }
+                else
+                    printf("El registro ya tiene ese tipo.\n");
+                break;
+
+            case 6:
+                return;
+
+            default:
+                printf("Error.");
+        }
+    }
+    return;
+}
+
+/*Funcion modificarRegistro: Menu donde se encuentran las opciones para modificar datos
+de un registro. Recibe por parametro una estructura Registro y la carpeta.
+Esta ultima es necesaria por si se quiere cambiar el tipo del registro*/
+void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
+    int opcion = 0;
+    while(opcion != 5){
+        limpiarConsola();
+        printf("                 --------------------                      \n");
+        printf("                | Modificar Registro |                     \n");
+        printf("                 --------------------                      \n");
+        printf("1) Modificar persona involucrada.\n");
+        printf("2) Modificar fecha del registro.\n");
+        printf("3) Modificar descripcion del registro.\n");
+        printf("4) Modificar el tipo del registro.\n");
+        printf("5) Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,5);
+        switch(opcion){
+            case 1:
+                    registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada:");
+                    break;
+
+            case 2:
+                    registro->fechaRegistro = leerCadena("Ingrese la nueva fecha:");
+                    break;
+
+            case 3:
+                    registro->detalle = leerCadena("Ingrese la nueva descripcion del registro:");
+                    break;
+
+            case 4:
+                    modificarTipoRegistro(registro, carpeta->registros);
+                    break;
+
+            case 5:
+                return;
+
+            default:
+                printf("Error.");
+        }
+    }
+    return;
+}
+
+
 /*Funcion modificarDatos: Menu donde se encuentran las opciones para modificar datos
 de un SIAU. Recibe por parametro una estructura SIAU.*/
 void modificarDatos(struct SIAU * siau) {
@@ -1060,33 +1215,33 @@ void modificarDatos(struct SIAU * siau) {
 
             case 1:
                 /*  Modificar causa*/
-                break;
+                    break;
 
             case 2:
-                /*Modificar denuncia en carpeta*/
-                break;
+                    validarModificacionRegistros(siau, 0);
+                    break;
 
             case 3:
-                /*Modificar declaracion en carpeta*/
-                break;
+                    validarModificacionRegistros(siau, 1);
+                    break;
 
             case 4:
-                /*Modificar prueba en carpeta*/
-                break;
+                    validarModificacionRegistros(siau, 2);
+                    break;
 
             case 5:
-                /*Modificar diligencia en carpeta*/
-                break;
+                    validarModificacionRegistros(siau, 3);
+                    break;
 
             case 6:
-                /*Modificar resolucion judicial en carpeta*/
-                break;
+                    validarModificacionRegistros(siau, 4);
+                    break;
             case 7:
                 /*Modificar imputado en carpeta*/
-                break;
+                    break;
             case 8:
                 /*Volver atras*/
-                return;
+                    return;
 
 
             default:
@@ -1095,7 +1250,6 @@ void modificarDatos(struct SIAU * siau) {
     }
     return;
 }
-
 /*Funcion borrarDatos: Menu donde se encuentran las opciones para borrar datos
 de un SIAU. Recibe por parametro una estructura SIAU.*/
 void borrarDatos(struct SIAU * siau) {
