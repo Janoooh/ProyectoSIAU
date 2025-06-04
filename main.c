@@ -1088,7 +1088,7 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
         switch(opcion){
             case 1:
                 if (registro->tipo != 0) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Denuncia");
                     registro->tipo = 0;
                     agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                 }
@@ -1098,7 +1098,7 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 2:
                 if (registro->tipo != 1) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Declaracion");
                     registro->tipo = 1;
                     agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                 }
@@ -1108,7 +1108,7 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 3:
                 if (registro->tipo != 2) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Prueba");
                     registro->tipo = 2;
                     agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                 }
@@ -1118,7 +1118,7 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 4:
                 if (registro->tipo != 3) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Diligencia");
                     registro->tipo = 3;
                     agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                 }
@@ -1128,7 +1128,7 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 5:
                 if (registro->tipo != 4) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id);
+                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Resolucion Judicial");
                     registro->tipo = 4;
                     agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                 }
@@ -1165,15 +1165,15 @@ void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
         leerOpcion(&opcion,1,5);
         switch(opcion){
             case 1:
-                    registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada:");
+                    registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada: ");
                     break;
 
             case 2:
-                    registro->fechaRegistro = leerCadena("Ingrese la nueva fecha:");
+                    registro->fechaRegistro = leerCadena("Ingrese la nueva fecha: ");
                     break;
 
             case 3:
-                    registro->detalle = leerCadena("Ingrese la nueva descripcion del registro:");
+                    registro->detalle = leerCadena("Ingrese la nueva descripcion del registro: ");
                     break;
 
             case 4:
