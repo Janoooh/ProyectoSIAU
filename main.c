@@ -652,7 +652,7 @@ Recibe el número y el titulo, dependiendo de que desea eliminar:
 "0": "Denuncia", "1": "Declaración", "2": "Prueba", "3": "Diligencia", "4": "Resolución judicial"
 Pide datos: RUC e ID del registro*/
 void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombreTipoRegistro) {
-    struct NodoCausa *causa = NULL;
+    struct Causa *causa = NULL;
     char rucCausa[15];
     int idRegistro;
 
@@ -666,8 +666,8 @@ void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombre
     causa = buscarCausaPorRuc(siau->causas, rucCausa);
     if (causa != NULL) {
         /*Se valida de que la carpeta investigativa y el arreglo de registros existan*/
-        if (causa->datosCausa->investigacion != NULL && causa->datosCausa->investigacion->registros != NULL) {
-            eliminarRegistro(&(causa->datosCausa->investigacion->registros[tipoRegistro]), idRegistro, nombreTipoRegistro);
+        if (causa->investigacion != NULL && causa->investigacion->registros != NULL) {
+            eliminarRegistro(&(causa->investigacion->registros[tipoRegistro]), idRegistro, nombreTipoRegistro);
         }
     }
     else{
@@ -684,7 +684,7 @@ struct NodoCausa* encontrarReemplazo(struct NodoCausa* nodo) {
 }
 
 /*FUNCION: Elimina un nodo del ABB*/
-struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa) {
+struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa, int *eliminacionExitosa) {
     struct Causa *datosAEliminar = NULL;
     struct NodoCausa *aux = NULL;
     char *rucTemporal;
@@ -693,17 +693,19 @@ struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa) {
     /*Caso: El arbol esta vacio */
     if (raiz == NULL) {
         printf("No se encontro una Causa con ese RUC.\n");
+        *eliminacionExitosa = 0;
         return raiz;
     }
 
     ruc = strcmp(rucCausa, raiz->datosCausa->ruc);
     /*Buscar el NodoCausa*/
     if (ruc < 0) {
-        raiz->izq = eliminarCausa(raiz->izq, rucCausa);
+        raiz->izq = eliminarCausa(raiz->izq, rucCausa, eliminacionExitosa);
     } else if (ruc > 0) {
-        raiz->der = eliminarCausa(raiz->der, rucCausa);
+        raiz->der = eliminarCausa(raiz->der, rucCausa, eliminacionExitosa);
     /*El NodoCausa fue encontrado*/
     } else {
+        *eliminacionExitosa = 1;
         /*Caso 1: No tiene hijos o solo tiene derecho*/
         if (raiz->izq == NULL) {
             printf("Se elimino la Causa con RUC %s.\n", rucCausa);
@@ -725,7 +727,7 @@ struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa) {
         aux->datosCausa = datosAEliminar;
         /*Ahora busca el nodo con los datos a eliminar que quedaron en el de reemplazo, como es el
         menor del subarbol derecho, su hijo izquierdo es NULL, cae en caso 1 y es eliminado*/
-        raiz->der = eliminarCausa(raiz->der, aux->datosCausa->ruc);
+        raiz->der = eliminarCausa(raiz->der, aux->datosCausa->ruc, eliminacionExitosa);
     }
     /*Al finalizar la eliminacion del nodo, se retorna el arbol actualizado*/
     return raiz;
@@ -736,11 +738,15 @@ Pide datos: RUC, lo busca y lo elimina*/
 void eliminarCausaEnArbol(struct SIAU *siau) {
     /*Declaracion de variables*/
     char rucCausa[16];
+    int eliminacionExitosa = 0;
 
     /*Consultar sobre los datos*/
     printf("Ingrese el RUC de la Causa que desea eliminar.\n");
     scanf("%s", rucCausa);
-    siau->causas = eliminarCausa(siau->causas, rucCausa);
+    siau->causas = eliminarCausa(siau->causas, rucCausa, &eliminacionExitosa);
+    if (eliminacionExitosa) {
+        siau->cantCausas--;
+    }
 }
 
 void compactarArreglo(int pos, char **imputados, int pLibre) {
@@ -765,14 +771,12 @@ void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado) {
         }
     }
     printf("No se encontro Imputado con RUT %s.\n", rutImputado);
-    return;
 }
 
 /*FUNCION PRINCIPAL DE ELIMINACION: Elimina un imputado de una Causa. Pide datos: RUC y RUT*/
 void eliminarImputadoDeCausa(struct SIAU *siau) {
     struct Causa *causa = NULL;
     char rutImputado[14], rucCausa[16];
-    int i;
 
     /*Consulta sobre los datos*/
     printf("Ingrese el RUC de la Causa a la que desea eliminar el imputado: ");
@@ -783,7 +787,7 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
     /*Se verifica si existe la causa*/
     causa = buscarCausaPorRuc(siau->causas, rucCausa);
     if (causa != NULL) {
-        if (causa->investigacion->imputados != NULL) {
+        if (causa->investigacion != NULL && causa->investigacion->imputados != NULL) {
             /*Si existe la Causa y el arreglo de Imputados, se elimina al acusado con el rut*/
             eliminarImputado(causa->investigacion->imputados, &causa->investigacion->cantImputados, rutImputado);
         }
