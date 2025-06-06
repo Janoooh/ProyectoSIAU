@@ -95,7 +95,7 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegistro);
 void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombreTipoRegistro);
 struct NodoCausa* encontrarReemplazo(struct NodoCausa* nodo);
-struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa);
+struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa, int *eliminacionExitosa);
 void eliminarCausaEnArbol(struct SIAU *siau);
 void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado);
 void eliminarImputadoDeCausa(struct SIAU *siau);
