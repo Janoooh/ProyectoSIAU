@@ -436,7 +436,7 @@ void imprimirRegistro(struct Registro *registro) {
     printf("===========================================================\n");
     printf(" ID : %i\n", registro->id);
     switch (registro->tipo) {
-        default:
+        case 0:
             printf(" Tipo : Denuncia\n");
             break;
         case 1:
@@ -451,6 +451,8 @@ void imprimirRegistro(struct Registro *registro) {
         case 4:
             printf(" Tipo : Resolucion Judicial\n");
             break;
+        default:
+            printf("ERROR.");
     }
     printf(" Fecha: %s\n", registro->fechaRegistro);
     printf(" ----------------------------------------------------------\n");
@@ -656,16 +658,16 @@ void buscarEnCarpeta(struct SIAU *siau, int tipo) {
 
     tempCausa = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa buscada(Max 14 caracteres):"));
     if (tempCausa == NULL) {
-        printf("No se encontro ninguna causa con ese RUC.\n");
+        printf("****** No se encontro ninguna causa con ese RUC ******\n");
         return;
     }
 
     if (tipo != 5){
-        printf("Ingrese el ID de la causa buscada:");
+        printf("Ingrese el ID de la causa buscada (solo numeros):");
         scanf("%d", &idBuffer);
         tempRegistro = buscarRegistroPorId(tempCausa->investigacion,tipo,idBuffer);
         if (tempRegistro == NULL) {
-            printf("No se encontro ningun registro con esa ID.\n");
+            printf("****** No se encontro ningun registro con esa ID ******\n");
             return;
         }
         imprimirRegistro(tempRegistro);
@@ -674,7 +676,7 @@ void buscarEnCarpeta(struct SIAU *siau, int tipo) {
 
     tempImputado = buscarImputadoEnArreglo(tempCausa->investigacion->imputados, tempCausa->investigacion->cantImputados, leerCadena("Ingrese el RUT del imputado a buscar(Max 13 caracteres):"));
     if (tempImputado == NULL) {
-        printf("No se encontro ningun imputado con ese RUT.\n");
+        printf(" ****** No se encontro ningun imputado con ese RUT ******\n");
         return;
     }
     printf("El imputado se encuentra dentro del arreglo.");
@@ -697,15 +699,15 @@ void modificarCausa(struct NodoCausa * causas) {
     causaBuscada = buscarCausaPorRuc(causas, leerCadena("Ingrese el RUC de la causa a modificar : "));
 
     if (causaBuscada == NULL) {
-        printf("La RUC ingresado no se encontro en ninguna causa.\n");
+        printf("****** La RUC ingresado no se encontro en ninguna causa ******\n");
         return;
     }
 
     while(opcion != 5){
         limpiarConsola();
-        printf("                 -------------------                      \n");
-        printf("                 | Modificar Causa |                     \n");
-        printf("                 -------------------                      \n");
+        printf("                 =====================                     \n");
+        printf("                 || Modificar Causa ||                     \n");
+        printf("                 =====================                    \n");
         printf("1) Modificar denunciante.\n");
         printf("2) Modificar descripcion de la denuncia.\n");
         printf("3) Modificar fecha de la denuncia.\n");
@@ -795,17 +797,17 @@ void validarModificacionRegistros(struct SIAU * siau, int tipo) {
     int idBuscado;
 
     causaBuscada = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa a modificar : "));
-    printf("Ingrese el ID del registro buscado : ");
+    printf("Ingrese el ID del registro buscado (solo numeros): ");
     scanf("%d", &idBuscado);
     if (causaBuscada != NULL && causaBuscada->investigacion != NULL) {
         registroBuscado = buscarRegistroPorId(causaBuscada->investigacion, tipo, idBuscado);
         if (registroBuscado != NULL)
             modificarRegistro(registroBuscado, causaBuscada->investigacion);
         else
-            printf("No existe ese registro.\n");
+            printf("****** No existe ese registro ******\n");
     }
     else
-        printf("No existe.\n");
+        printf("****** No existe ******\n");
 }
 
 /*Funcion modificarRegistro: Menu donde se encuentran las opciones para modificar datos
@@ -815,9 +817,9 @@ void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
     int opcion = 0;
     while(opcion != 5){
         limpiarConsola();
-        printf("                 --------------------                      \n");
-        printf("                | Modificar Registro |                     \n");
-        printf("                 --------------------                      \n");
+        printf("                ========================                   \n");
+        printf("                || Modificar Registro ||                   \n");
+        printf("                ========================                   \n");
         printf("1) Modificar persona involucrada.\n");
         printf("2) Modificar fecha del registro.\n");
         printf("3) Modificar descripcion del registro.\n");
@@ -827,15 +829,15 @@ void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
         leerOpcion(&opcion,1,5);
         switch(opcion){
             case 1:
-                registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada: ");
+                registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada (Max 13 caracteres): ");
             break;
 
             case 2:
-                registro->fechaRegistro = leerCadena("Ingrese la nueva fecha: ");
+                registro->fechaRegistro = leerCadena("Ingrese la nueva fecha (Formato DD/MM/AAAA): ");
             break;
 
             case 3:
-                registro->detalle = leerCadena("Ingrese la nueva descripcion del registro: ");
+                registro->detalle = leerCadena("Ingrese la nueva descripcion del registro (Max 100 caracteres): ");
             break;
 
             case 4:
@@ -846,7 +848,7 @@ void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                 return;
 
             default:
-                printf("Error.");
+                printf("Error.\n");
         }
     }
     return;
@@ -877,10 +879,10 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                         agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                     }
                     else
-                        printf("Ese id ya esta tomado.\n");
+                        printf("****** Ese id ya esta tomado ******\n");
                 }
                 else
-                    printf("El registro ya tiene ese tipo.\n");
+                    printf("****** El registro ya tiene ese tipo ******\n");
                 break;
 
             case 2:
@@ -891,10 +893,10 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                         agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                     }
                     else
-                        printf("Ese id ya esta tomado.\n");
+                        printf("****** Ese id ya esta tomado ******\n");
                 }
                 else
-                    printf("El registro ya tiene ese tipo.\n");
+                    printf("****** El registro ya tiene ese tipo ******\n");
                 break;
 
             case 3:
@@ -905,10 +907,10 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                         agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                     }
                     else
-                        printf("Ese id ya esta tomado.\n");
+                        printf("****** Ese id ya esta tomado ******\n");
                 }
                 else
-                    printf("El registro ya tiene ese tipo.\n");
+                    printf("****** El registro ya tiene ese tipo ******\n");
                 break;
 
             case 4:
@@ -919,10 +921,10 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                         agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                     }
                     else
-                        printf("Ese id ya esta tomado.\n");
+                        printf("****** Ese id ya esta tomado ******\n");
                 }
                 else
-                    printf("El registro ya tiene ese tipo.\n");
+                    printf("****** El registro ya tiene ese tipo ******\n");
                 break;
 
             case 5:
@@ -933,10 +935,10 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                         agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
                     }
                     else
-                        printf("Ese id ya esta tomado.\n");
+                        printf("****** Ese id ya esta tomado ******\n");
                 }
                 else
-                    printf("El registro ya tiene ese tipo.\n");
+                    printf("****** El registro ya tiene ese tipo ******\n");
                 break;
 
             case 6:
@@ -960,7 +962,7 @@ void modificarImputado(struct NodoCausa *causas) {
 
     tempCausa = buscarCausaPorRuc(causas,leerCadena("Ingrese el RUC de la causa que desea modificar(Max 14 caracteres):"));
     if (tempCausa == NULL) {
-        printf("El RUC ingresado no se encontro en ninguna causa.\n");
+        printf("****** El RUC ingresado no se encontro en ninguna causa ******\n");
         return;
     }
 
@@ -976,12 +978,12 @@ void modificarImputado(struct NodoCausa *causas) {
                 printf("El RUT se modifico correctamente.\n");
                 return; /*El dato fue modificado exitosamente.*/
             }else {
-                printf("El RUT ingresado ya existia en el arreglo.");
+                printf("****** El RUT ingresado ya existia en el arreglo ******");
                 return; /*El RUT nuevo ya existe en el arreglo.*/
             }
         }
     }
-    printf("No se encontro el RUT dentro del arreglo de la causa.\n");
+    printf("****** No se encontro el RUT dentro del arreglo de la causa ******\n");
     return;
 
 }
@@ -998,7 +1000,7 @@ void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegist
 
     /*Caso: La lista esta vacia*/
     if (rec == NULL) {
-        printf("La lista esta vacia.\n");
+        printf("****** La lista esta vacia ******\n");
         return;
     }
     while (rec != NULL) {
@@ -1017,7 +1019,7 @@ void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegist
         ant = rec;
         rec = rec->sig;
     }
-    printf("La %s (ID %d) no ha sido encontrada.\n", nombreTipoRegistro, id);
+    printf("****** La %s (ID %d) no ha sido encontrada ******\n", nombreTipoRegistro, id);
 }
 
 /*FUNCION PRINCIPAL DE ELIMINACION: Elimina un registro dado, del arreglo "registros"
@@ -1044,7 +1046,7 @@ void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombre
         }
     }
     else{
-        printf("No se encontro la Causa con RUC %s.\n", rucCausa);
+        printf("****** No se encontro la Causa con RUC %s ******\n", rucCausa);
     }
 }
 
@@ -1064,7 +1066,7 @@ struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa, int *eli
 
     /*Caso: El arbol esta vacio */
     if (raiz == NULL) {
-        printf("No se encontro una Causa con ese RUC.\n");
+        printf("****** No se encontro una Causa con ese RUC ******\n");
         *eliminacionExitosa = 0;
         return raiz;
     }
@@ -1142,7 +1144,7 @@ void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado) {
             return;
         }
     }
-    printf("No se encontro Imputado con RUT %s.\n", rutImputado);
+    printf("****** No se encontro Imputado con RUT %s ******\n", rutImputado);
 }
 
 /*FUNCION PRINCIPAL DE ELIMINACION: Elimina un imputado de una Causa. Pide datos: RUC y RUT*/
@@ -1165,7 +1167,7 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
         }
     }
     else {
-        printf("No se encontro la Causa con RUC %s.\n", rucCausa);
+        printf("****** No se encontro la Causa con RUC %s ******\n", rucCausa);
     }
 }
 
@@ -1306,7 +1308,7 @@ void reporteImputados(struct SIAU *siau){
 
     pLibreImputados = obtenerImputados(siau, &arregloImputados);
     if(arregloImputados == NULL || pLibreImputados == 0){
-        printf("No existen imputados en el sistema.\n");
+        printf("****** No existen imputados en el sistema ******\n");
         return;
     }
 
@@ -1821,7 +1823,7 @@ void borrarDatos(struct SIAU * siau) {
 
 
             default:
-                printf("Error.");
+                printf("Error.\n");
         }
     }
     return;
@@ -1841,7 +1843,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
         printf("2- Mostrar resoluciones judiciales de imputado.\n");
         printf("3- Mostrar resoluciones judiciales por tipo de resolucion.\n");
         printf("4- Generar reporte estadistico.\n");
-        printf("5- Funcion extra 1.\n");
+        printf("5- Generar reporte con la cantidad total de cada registro.\n");
         printf("6- Generar reporte de imputados.\n");
         printf("7- Volver atras.\n");
         printf("Ingrese una opcion:");
@@ -1857,7 +1859,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
                 lecturaEstado -= 1;
                 mostrarCausasPorEstado(siau->causas,lecturaEstado,&resultadoOperacion);
                 if (resultadoOperacion == 0)
-                    printf("No se encontraron causas en ese estado.\n");
+                    printf("****** No se encontraron causas en ese estado ******\n");
 
                 break;
 
@@ -1867,9 +1869,9 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
                     resultadoOperacion = 0;
                     mostrarResolucionesJudicialesDeImputado(tempCausa->investigacion, leerCadena("Ingrese el RUT del imputado(Max 13 caracteres):"),&resultadoOperacion);
                     if (resultadoOperacion == 0)
-                        printf("No se encontraron resoluciones judiciales para el imputado.");
+                        printf("****** No se encontraron resoluciones judiciales para el imputado ******\n");
                 }else {
-                    printf("El RUC ingresado no se encontro en ninguna causa.");
+                    printf("****** El RUC ingresado no se encontro en ninguna causa ******\n");
                 }
                 break;
 
@@ -1898,7 +1900,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 
 
             default:
-                printf("Error.");
+                printf("Error.\n");
         }
     }
     return;
