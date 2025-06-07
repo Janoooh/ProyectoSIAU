@@ -518,9 +518,9 @@ void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado)// 1,2,3 o 4
 
 void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado)
 {
-    if (carpeta == NULL || imputadoBuscado == NULL) return;
-
     struct NodoRegistro *actual = carpeta->registros[4];
+
+    if (carpeta == NULL || imputadoBuscado == NULL) return;
 
     while (actual != NULL)
     {
@@ -566,9 +566,10 @@ struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
 /*Función para buscarRegistro en la carpeta dado un ID, de diferente tipo, ya sea 1, 2 ,3 ó 4 */
 struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro)
 {
+    struct NodoRegistro * actual = carpeta->registros[tipo];
+
     if (carpeta == NULL || tipo < 0 || tipo > 4)
         return NULL;
-    struct NodoRegistro * actual = carpeta->registros[tipo];
 
     while (actual != NULL)
     {
@@ -605,10 +606,13 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 void validarModificacionRegistros(struct SIAU * siau, int tipo) {
     struct Causa *causaBuscada;
     struct Registro *registroBuscado;
+    int idBuscado;
 
-    causaBuscada =(siau->causas, leerCadena("Ingrese el RUC de la denuncia a modificar : "));
+    causaBuscada = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la denuncia a modificar : "));
+    printf("Ingrese el ID del registro buscado : ");
+    scanf("%d", &idBuscado);
     if (causaBuscada != NULL && causaBuscada->investigacion != NULL) {
-        registroBuscado = buscarRegistroPorId(causaBuscada->investigacion, tipo, leerCadena("Ingrese el ID del registro buscado : "));
+        registroBuscado = buscarRegistroPorId(causaBuscada->investigacion, tipo, idBuscado);
         if (registroBuscado != NULL)
             modificarRegistro(registroBuscado, causaBuscada->investigacion);
         else
