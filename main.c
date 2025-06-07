@@ -90,6 +90,8 @@ struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc);
 struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro);
 char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado);
 
+void modificarCausa(struct NodoCausa * causas);
+int modificarEstadoCausa();
 void validarModificacionRegistros(struct SIAU * siau, int tipo);
 void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta);
 void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta);
@@ -560,7 +562,6 @@ struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
         return buscarCausaPorRuc(causas->der, ruc);
     }
 
-    return NULL;
 }
 
 /*Función para buscarRegistro en la carpeta dado un ID, de diferente tipo, ya sea 1, 2 ,3 ó 4 */
@@ -571,7 +572,7 @@ struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idR
     if (carpeta == NULL || tipo < 0 || tipo > 4)
         return NULL;
     
-    actual = carpeta->registros[tipo]
+    actual = carpeta->registros[tipo];
     while (actual != NULL)
     {
         if (actual->dataRegistro != NULL && actual->dataRegistro->id == idRegistro)
@@ -603,6 +604,106 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 /*------------------------ FUNCIONES RELACIONADAS CON MODIFICAR LOS DATOS ----------------------------------*/
 /*----------------------------------------------------------------------------------------------------------*/
 
+/*Funcion modificarCausa: Permite cambiar los datos guardados en cada campo de la causa, ya sean
+los que estan dentro de la denuncia inicial, o el estado de la causa. Recibe por parametro
+la raiz del arbol de causas.*/
+void modificarCausa(struct NodoCausa * causas) {
+    struct Causa *causaBuscada = NULL;
+    int nuevoEstado, opcion = 0;
+
+    causaBuscada = buscarCausaPorRuc(causas, leerCadena("Ingrese el RUC de la causa a modificar : "));
+
+    if (causaBuscada == NULL) {
+        printf("La RUC ingresado no se encontro en ninguna causa.\n");
+        return;
+    }
+
+    while(opcion != 5){
+        limpiarConsola();
+        printf("                 -------------------                      \n");
+        printf("                 | Modificar Causa |                     \n");
+        printf("                 -------------------                      \n");
+        printf("1) Modificar denunciante.\n");
+        printf("2) Modificar descripcion de la denuncia.\n");
+        printf("3) Modificar fecha de la denuncia.\n");
+        printf("4) Modificar estado de la causa.\n");
+        printf("5) Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,5);
+        switch(opcion) {
+            case 1:
+                causaBuscada->denunciaInicial->involucrado = leerCadena("Ingrese el nuevo RUT del denunciante(Max 13 caracteres): ");
+            printf("Modificacion realizada correctamente.");
+            break;
+
+            case 2:
+                causaBuscada->denunciaInicial->fechaRegistro = leerCadena("Ingrese la nueva descripcion de la denuncia(Max 100 caracteres): ");
+            printf("Modificacion realizada correctamente.");
+            break;
+
+            case 3:
+                causaBuscada->denunciaInicial->detalle = leerCadena("Ingrese la nueva fecha(Formato DD/MM/AAAA): ");
+            printf("Modificacion realizada correctamente.");
+            break;
+
+            case 4:
+                nuevoEstado = modificarEstadoCausa();
+                if(nuevoEstado != -1){
+                    causaBuscada->estado = nuevoEstado;
+                    printf("Modificacion realizada correctamente.");
+                }
+            break;
+
+            case 5:
+                return;
+
+            default:
+                printf("Error.");
+        }
+    }
+    return;
+
+}
+
+/*Funcion modificarEstadoCausa: Encargada de realizar de manera mas amigable con el usuario el cambio de estado
+de la causa, representa a traves de un menu de prints las distintas opciones para realizar la modificacion.
+Retorna un numero correspondiente al nuevo estado de la causa, o un -1 si se decide volver al menu anterior.*/
+int modificarEstadoCausa(){
+    int opcion = 0;
+
+    while(opcion != 5){
+        limpiarConsola();
+        printf("Seleccione el nuevo estado de la causa\n");
+        printf("-------------------------------------\n");
+        printf("[1] En investigacion.\n");
+        printf("[2] Cerrada.\n");
+        printf("[3] En juicio.\n");
+        printf("[4] Archivada.\n");
+        printf("[5] Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,5);
+        switch(opcion){
+            case 1:
+                return 0;
+
+            case 2:
+                return 1;
+
+            case 3:
+                return 2;
+
+            case 4:
+                return 3;
+
+            case 5:
+                return -1;
+
+            default:
+                printf("Error.");
+                return -1;
+        }
+    }
+}
 
 /* Funcion que valida la modificacion de un registro, si todo esta bien llama a la funcion de modificar*/
 void validarModificacionRegistros(struct SIAU * siau, int tipo) {
@@ -655,7 +756,7 @@ void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
             break;
 
             case 4:
-                modificarTipoRegistro(registro, carpeta->registros);
+                modificarTipoRegistro(registro, carpeta);
             break;
 
             case 5:
@@ -1249,6 +1350,7 @@ void modificarDatos(struct SIAU * siau) {
 
             case 1:
                 /*  Modificar causa*/
+                    modificarCausa(siau->causas);
                     break;
 
             case 2:
@@ -1472,7 +1574,6 @@ int main(void) {
             case 7:
                 /*Cerrar*/
                 return 0;
-                break;
 
             default:
                 printf("Error.");
