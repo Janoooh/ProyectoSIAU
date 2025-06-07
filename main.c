@@ -1883,12 +1883,13 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
                 break;
 
             case 5:
-                /*Eliminar causas con estado cerrado.*/
+                /*mostrar Reporte de Registros*/
+                    imprimirReporteRegistros(siau);
                 break;
 
             case 6:
                 /*Funcion extra 2*/
-                    imprimirReporteRegistros(siau);
+                    reporteImputados(siau);
                 break;
 
             case 7:
