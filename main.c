@@ -1569,6 +1569,25 @@ void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char
     return;
 }
 
+/*ESTOY DESARROLLANDO ESTA FUNCION -Jano
+ *void modificarImputado(struct NodoCausa *causas) {
+    struct Causa * tempCausa = NULL;
+    char *tempImputado = NULL;
+
+    tempCausa = buscarCausaPorRuc(causas,leerCadena("Ingrese el RUC de la causa que desea modificar(Max 14 caracteres):"));
+    if (tempCausa == NULL) {
+        printf("El RUC ingresado no se encontro en ninguna causa.\n");
+        return;
+    }
+
+    tempImputado = buscarImputadoEnCarpeta(tempCausa->investigacion, leerCadena("Ingrese el RUT que desea modificar:"));
+    if (tempImputado == NULL) {
+        printf("El RUT ingresado no se encontro en el arreglo de imputados.");
+        return;
+    }
+
+}*/
+
 /*Funcion modificarDatos: Menu donde se encuentran las opciones para modificar datos
 de un SIAU. Recibe por parametro una estructura SIAU.*/
 void modificarDatos(struct SIAU * siau) {
@@ -1617,6 +1636,7 @@ void modificarDatos(struct SIAU * siau) {
                     break;
             case 7:
                 /*Modificar imputado en carpeta*/
+                    /*modificarImputado(siau->causas);*/
                     break;
             case 8:
                 /*Volver atras*/
