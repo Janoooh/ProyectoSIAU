@@ -121,6 +121,10 @@ void reporteImputados(struct SIAU *siau);
 void ImprimeTipoDeResolucion(struct NodoRegistro *head, char *tipo);
 void mostrarPorTipoDeResolucion(struct SIAU *siau);
 
+void imprimirReporteRegistros(struct SIAU * siau);
+void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
+void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
+
 /*----------------------------------------------------------------------------------------------------------*/
 /*-------------------------- FUNCIONES RELACIONADA CON AGREGAR Y CREAR DATOS -------------------------------*/
 /*----------------------------------------------------------------------------------------------------------*/
@@ -1357,10 +1361,56 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau) {
     }
 }
 
+/* Ultima función extra De mostrar o imprimir Registro */
+void imprimirReporteRegistros(struct SIAU * siau)
+{
+    int denuncias = 0, declaraciones = 0, pruebas = 0,registrosDiligencias = 0, registrosResoluciones = 0;
+
+    ContarRegistrosExistentes(siau, &denuncias, &declaraciones,&pruebas, &registrosDiligencias, &registrosResoluciones );
+
+    printf("===========================================================\n");
+    printf("====================Reporte de Registros===================\n");
+    printf("===========================================================\n");
+
+    printf("Cantidad total de denuncias: %i\n", denuncias);
+    printf("Cantidad total de declaraciones: %i\n", declaraciones);
+    printf("Cantidad total de pruebas: %i\n" , pruebas);
+    printf("Cantidad total de diligencias: %i\n" , registrosDiligencias);
+    printf("Cantidad total de resoluciones: %i\n" , registrosResoluciones);
+}
+/*Denuncias[0], Declaraciones, pruebas, registros diligencias,registros resoluciones*/
+void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas,int * diligencias, int * resoluciones )
+{
+    contarRegistrosPorNodo(siau->causas, cantDenuncias, declaraciones, pruebas, diligencias, resoluciones);
+
+}
+
+void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * declaraciones, int * pruebas, int * diligencias, int* resoluciones)
+{
+    if ( raiz == NULL ) return; // caso Base
+    int * contadores[5] = { denuncias, declaraciones, pruebas, diligencias, resoluciones};// incializo punteros a los contadores en cada espacio
+    int i;
+    struct Carpeta * carpeta = raiz->datosCausa->investigacion;// vamos a la carpeta
+
+    contarRegistrosPorNodo(raiz->izq,denuncias, declaraciones, pruebas, diligencias, resoluciones);// recorre nodo izquierdo
 
 
+    // procesa el nodo
+    if (carpeta != NULL)
+    {
+        for (i = 0; i < 5;i++)// Recorremos el arreglo creado de punteros a los  contadores
+        {
+            struct  NodoRegistro * actual = carpeta->registros[i];
+            while (actual != NULL)
+            {
+                (*contadores[i])++;// el contador en la 0(denuncias) se incrementa
+                actual = actual->sig;// pasa al siguiente;
+            }
 
-
+        }
+    }
+    contarRegistrosPorNodo(raiz->der,denuncias, declaraciones,pruebas, diligencias, resoluciones);
+}
 
 
 // ----------------------------------------------------------------------------------
@@ -1577,7 +1627,7 @@ void listarDatos(struct SIAU *siau) {
 
 /*Funcion buscarDatos: Menu donde se encuentran las opciones para buscar datos
 en un SIAU. Recibe por parametro una estructura SIAU.*/
-void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char * rutBuscado*/) {
+void buscarDatos(struct SIAU * siau /*char * rutBuscado*/) {
     struct Causa * tempCausa = NULL;
     int opcion = 0;
     while(opcion != 8){
