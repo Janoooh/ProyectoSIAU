@@ -131,9 +131,9 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau);
  (El 7 es para que no entre en el ciclo del menu principal).*/
 int loginPrograma() {
     char buffer[31];
-    printf("===========================================================\n");
-    printf("======================Inicio de sesion=====================\n");
-    printf("===========================================================\n");
+    printf("============================================================\n");
+    printf("======================Inicio de sesion======================\n");
+    printf("============================================================\n");
     printf("Sistema de informacion y atencion a usuarios.\n");
     printf("Favor de ingresar la clave de acceso(Max 30 caracteres, sin espacios):");
     scanf("%s",buffer);
@@ -303,7 +303,7 @@ struct Registro * crearRegistro(int tipoRegistro){
     /*Reserva de memoria para el nuevo registro*/
     nuevo = (struct Registro *) malloc(sizeof(struct Registro));
 
-    printf("Ingrese el id del registro:");
+    printf("Ingrese el id del registro (un numero cualquiera):");
     scanf("%d",&(nuevo->id));
 
     nuevo->involucrado = leerCadena(strcat(bufferInvolucrado,tiposInvolucrado[tipoRegistro]));
@@ -377,11 +377,11 @@ void codigoAgregarRegistroMenu(struct SIAU *siau, int tipoRegistro) {
     tempRegistro = crearRegistro(tipoRegistro);
     resultadoInstruccion = agregarRegistro(siau, tempRegistro);
     if (resultadoInstruccion == 1)
-        printf("El registro se agrego correctamente.");
+        printf("****** El registro se agrego correctamente ******\n\n");
     else if (resultadoInstruccion == 0)
-        printf("El registro ya existia en la causa (Mismo id y mismo tipo).");
+        printf("****** El registro ya existia en la causa (Mismo id y mismo tipo) ******\n\n");
     else if (resultadoInstruccion == -1)
-        printf("No se encontro la causa a la cual agregar el registro.");
+        printf("No se encontro la causa a la cual agregar el registro.\n");
 }
 
 /*Funcion agregarImputado: Funcion encargada de agregar una cadena que contendra un RUT
@@ -448,7 +448,7 @@ void imprimirRegistro(struct Registro *registro) {
             printf(" Tipo : Resolucion Judicial\n");
             break;
     }
-    printf(" Fecha: %s", registro->fechaRegistro);
+    printf(" Fecha: %s\n", registro->fechaRegistro);
     printf(" ----------------------------------------------------------\n");
     printf(" Involucrado : \n");
     if (registro->involucrado != NULL) {
@@ -462,6 +462,7 @@ void imprimirRegistro(struct Registro *registro) {
 
 /*Funcion que recibe una causa e imprime su ruc, estado y la denuncia inicial (llamando a la funcion para imprimir registro)*/
 void imprimirCausa(struct Causa *causa) {
+    printf("*************************************************************\n");
     printf(" --------------------------------------------------------- \n");
     printf("| Ruc : %s       | Estado : ", causa->ruc);
     switch (causa->estado) {
@@ -482,6 +483,7 @@ void imprimirCausa(struct Causa *causa) {
     }
     printf(" --------------------------------------------------------- \n");
     imprimirRegistro(causa->denunciaInicial);
+    printf("*************************************************************\n");
     printf("\n");
 }
 
@@ -496,7 +498,7 @@ void recorrerImputados(char **imputados, int cantidad) {
 /*Funcion que recorre una lista de registros y llama a la funcion para imprimir cada uno de ellos*/
 void recorrerRegistrosParaImprimirlos(struct NodoRegistro *listaRegistros) {
     if (listaRegistros == NULL)
-        printf("No hay registros\n");
+        printf("****** No hay registros ******\n");
     while (listaRegistros != NULL) {
         /*llamada a la funcion para imprimir el registro*/
         imprimirRegistro(listaRegistros->dataRegistro);
@@ -714,12 +716,12 @@ void modificarCausa(struct NodoCausa * causas) {
             break;
 
             case 2:
-                causaBuscada->denunciaInicial->fechaRegistro = leerCadena("Ingrese la nueva descripcion de la denuncia(Max 100 caracteres): ");
+                causaBuscada->denunciaInicial->detalle = leerCadena("Ingrese la nueva descripcion de la denuncia(Max 100 caracteres): ");
             printf("Modificacion realizada correctamente.");
             break;
 
             case 3:
-                causaBuscada->denunciaInicial->detalle = leerCadena("Ingrese la nueva fecha(Formato DD/MM/AAAA): ");
+                causaBuscada->denunciaInicial->fechaRegistro = leerCadena("Ingrese la nueva fecha(Formato DD/MM/AAAA): ");
             printf("Modificacion realizada correctamente.");
             break;
 
@@ -1310,7 +1312,7 @@ void reporteImputados(struct SIAU *siau){
     printf("Existen %d imputados totales en el sistema.\n",pLibreImputados);
     printf("Cantidad de causas que tiene cada imputado:\n");
     mostrarCantCausasPorImputado(siau, arregloImputados, pLibreImputados);
-    printf("Ingrese cualquier digito para volver atras:");
+    printf("\nIngrese cualquier digito para volver atras:");
     scanf("%s",bufferPausa);
 
     return;
@@ -1457,7 +1459,7 @@ void agregarDatos(struct SIAU *siau){
                 else if (resultadoOperacion == 0)
                     printf("El arreglo de imputados se quedo sin espacio.\n");
                 else
-                    printf("El imputado se agrego correctamente.\n");
+                    printf("****** El imputado se agrego correctamente ******\n\n");
                 break;
 
             case 8:
@@ -1592,7 +1594,7 @@ void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char
         printf("7- Buscar imputado en carpeta por RUT\n");
         printf("8- Volver atras.\n");
         printf("Ingrese una opcion:");
-        leerOpcion(&opcion,1,9);
+        leerOpcion(&opcion,1,8);
         printf("\n");
         switch(opcion){
             // falta mandar como parametro el rucBuscado
@@ -1817,7 +1819,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
                     if (resultadoOperacion == 0)
                         printf("No se encontraron resoluciones judiciales para el imputado.");
                 }else {
-                    printf("El RUC ingresado no se encontro en nignuna causa.");
+                    printf("El RUC ingresado no se encontro en ninguna causa.");
                 }
                 break;
 
@@ -1862,7 +1864,7 @@ int main(void) {
     int opcion = 0;
 
     opcion = loginPrograma();
-    printf("La sesion se inicio correctamente!");
+    printf("******* La sesion se inicio correctamente! *******");
 
     siau = (struct SIAU*)malloc(sizeof(struct SIAU));
     siau->causas = NULL;
