@@ -1888,7 +1888,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 
             case 6:
                 /*Funcion extra 2*/
-                    reporteImputados(siau);
+                    imprimirReporteRegistros(siau);
                 break;
 
             case 7:
