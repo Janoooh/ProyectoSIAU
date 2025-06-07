@@ -987,7 +987,7 @@ void eliminarRegistroEnArreglo(struct SIAU *siau, int tipoRegistro, char *nombre
     int idRegistro;
 
     /*Consultar sobre los datos*/
-    printf("Ingrese el RUC de la causa a la que desea eliminar la %s(Max 14 caracteres):", nombreTipoRegistro);
+    printf("Ingrese el RUC de la causa a la que desea eliminar la %s (Max 14 caracteres):", nombreTipoRegistro);
     scanf("%s", rucCausa);
     printf("Ingrese el id de la %s a eliminar: ", nombreTipoRegistro);
     scanf("%d", &idRegistro);
@@ -1070,7 +1070,7 @@ void eliminarCausaEnArbol(struct SIAU *siau) {
     int eliminacionExitosa = 0;
 
     /*Consultar sobre los datos*/
-    printf("Ingrese el RUC de la Causa que desea eliminar.\n");
+    printf("Ingrese el RUC de la Causa que desea eliminar (Max 14 caracteres): ");
     scanf("%s", rucCausa);
     siau->causas = eliminarCausa(siau->causas, rucCausa, &eliminacionExitosa);
     if (eliminacionExitosa) {
@@ -1108,7 +1108,7 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
     char rutImputado[14], rucCausa[16];
 
     /*Consulta sobre los datos*/
-    printf("Ingrese el RUC de la Causa a la que desea eliminar el imputado: ");
+    printf("Ingrese el RUC de la Causa a la que desea eliminar el imputado (Max 14 caracteres): ");
     scanf("%s", rucCausa);
     printf("Ingrese el RUT del imputado a eliminar: ");
     scanf("%s", rutImputado);
@@ -1296,7 +1296,7 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau) {
     char rucCausa[16], tipoDeResolucion[30];
 
     /*Consulta sobre datos*/
-    printf("Ingrese el RUC de la Causa a la que desea ver sus resoluciones judiciales: ");
+    printf("Ingrese el RUC de la Causa a la que desea ver sus resoluciones judiciales (Max 14 caracteres): ");
     scanf("%s", rucCausa);
     printf("Ingrese el tipo de resolucion que desea mostrar\n");
     printf("Ejemplo: 'Sentencia', 'Sobreseimiento', 'AutorizacionDiligencia', 'MedidaCautelar' o 'MedidaProteccion': ");
