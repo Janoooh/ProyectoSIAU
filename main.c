@@ -566,11 +566,12 @@ struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc)
 /*Función para buscarRegistro en la carpeta dado un ID, de diferente tipo, ya sea 1, 2 ,3 ó 4 */
 struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro)
 {
-    struct NodoRegistro * actual = carpeta->registros[tipo];
+    struct NodoRegistro * actual;
 
     if (carpeta == NULL || tipo < 0 || tipo > 4)
         return NULL;
-
+    
+    actual = carpeta->registros[tipo]
     while (actual != NULL)
     {
         if (actual->dataRegistro != NULL && actual->dataRegistro->id == idRegistro)
