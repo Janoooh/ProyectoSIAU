@@ -85,8 +85,8 @@ void recorrerImputados(char **imputados, int cantidad); /*Cambiar por recorrerIm
 void recorrerRegistrosParaImprimirlos(struct NodoRegistro *listaRegistros);
 void recorrerCausasParaImprimirlas(struct NodoCausa *actual);
 void listarCarpetas(struct Carpeta *carpeta, int parametro);
-void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado);/*Func Otras Opc.*/
-void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado);/*Func Otras Opc.*/
+void mostrarCausasPorEstado(struct NodoCausa * raiz, int estado, int *seImprimio);/*Func Otras Opc.*/
+void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado, int *seImprimio);/*Func Otras Opc.*/
 
 struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc);
 struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro);
@@ -97,8 +97,9 @@ void buscarEnCarpeta(struct SIAU *siau, int tipo);
 void modificarCausa(struct NodoCausa * causas);
 int modificarEstadoCausa();
 void validarModificacionRegistros(struct SIAU * siau, int tipo);
-void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta);
 void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta);
+void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta);
+void modificarImputado(struct NodoCausa *causas);
 
 
 void eliminarRegistro(struct NodoRegistro **head, int id, char *nombreTipoRegistro);
@@ -465,7 +466,7 @@ void imprimirCausa(struct Causa *causa) {
     printf("| Ruc : %s       | Estado : ", causa->ruc);
     switch (causa->estado) {
         case 0:
-            printf("Abierta           |\n");
+            printf("En investigacion  |\n");
             break;
         case 1:
             printf("Cerrada           |\n");
@@ -540,26 +541,27 @@ void listarCarpetas(struct Carpeta *carpeta, int parametro) {
 */
 
 // Mostrar Causas por estado
-void  mostrarCausasPorEstado(struct NodoCausa * raiz, int estado)// 1,2,3 o 4
+void mostrarCausasPorEstado(struct NodoCausa * raiz, int estado, int *seImprimio)// 1,2,3 o 4
 {
     if (raiz == NULL) return;
     //1.- Se recorre el subArbol izquierdo
-    mostrarCausasPorEstado(raiz->izq, estado);
+    mostrarCausasPorEstado(raiz->izq, estado, seImprimio);
 
     // si el estado es igual, imprimimos la causa usando la función de imprimir causa
     if (raiz->datosCausa != NULL && raiz->datosCausa->estado == estado)
     {
         // falta implementar la función
         imprimirCausa(raiz->datosCausa);
+        *(seImprimio) = 1;
     }
 
     // Recorre a la derecha
-    mostrarCausasPorEstado(raiz->der, estado);
+    mostrarCausasPorEstado(raiz->der, estado, seImprimio);
 }
 
 //Mostrar resoluciones judiciales de imputado
 
-void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado)
+void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado, int *seImprimio)
 {
     struct NodoRegistro *actual = carpeta->registros[4];
 
@@ -570,8 +572,8 @@ void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const cha
         // compara si existe el imputado y si lo está lo imprime
         if (actual->dataRegistro->involucrado != NULL && strcmp(actual->dataRegistro->involucrado, imputadoBuscado) == 0)
         {
-            // falta implementar la función
             imprimirRegistro(actual->dataRegistro);
+            *(seImprimio) = 1;
         }
         actual = actual->sig;
     }
@@ -752,8 +754,8 @@ int modificarEstadoCausa(){
         printf("-------------------------------------\n");
         printf("[1] En investigacion.\n");
         printf("[2] Cerrada.\n");
-        printf("[3] En juicio.\n");
-        printf("[4] Archivada.\n");
+        printf("[3] Archivada.\n");
+        printf("[4] En juicio.\n");
         printf("[5] Volver atras.\n");
         printf("Ingrese una opcion:");
         leerOpcion(&opcion,1,5);
@@ -941,7 +943,42 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
     return;
 }
 
+/*Funcion modificarImputado: Encargada de permitirle al usuario modificar un
+ RUT que ya se ingreso en la carpeta de alguna causa. Recibe por parametro el
+ nodo raiz del arbol de causas. */
+void modificarImputado(struct NodoCausa *causas) {
+    struct Causa * tempCausa = NULL;
+    char **arregloEnCarpeta = NULL;
+    char *tempImputado = NULL;
+    int x,tope;
 
+    tempCausa = buscarCausaPorRuc(causas,leerCadena("Ingrese el RUC de la causa que desea modificar(Max 14 caracteres):"));
+    if (tempCausa == NULL) {
+        printf("El RUC ingresado no se encontro en ninguna causa.\n");
+        return;
+    }
+
+    tope = tempCausa->investigacion->cantImputados;
+    arregloEnCarpeta = tempCausa->investigacion->imputados;
+    tempImputado = leerCadena("Ingrese el RUT que desea modificar:");
+
+    for (x = 0; x < tope; x++) {
+        if (strcmp(tempImputado,arregloEnCarpeta[x]) == 0) {
+            tempImputado = leerCadena("Ingrese el nuevo RUT:");
+            if (buscarImputadoEnCarpeta(tempCausa->investigacion,tempImputado) == NULL) {
+                arregloEnCarpeta[x] = tempImputado;
+                printf("El RUT se modifico correctamente.\n");
+                return; /*El dato fue modificado exitosamente.*/
+            }else {
+                printf("El RUT ingresado ya existia en el arreglo.");
+                return; /*El RUT nuevo ya existe en el arreglo.*/
+            }
+        }
+    }
+    printf("No se encontro el RUT dentro del arreglo de la causa.\n");
+    return;
+
+}
 
 /*----------------------------------------------------------------------------------------------------------*/
 /*------------------------ FUNCIONES RELACIONADAS CON ELIMINAR DATOS ESPECIFICOS----------------------------*/
@@ -1610,25 +1647,6 @@ void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char
     return;
 }
 
-/*ESTOY DESARROLLANDO ESTA FUNCION -Jano
- *void modificarImputado(struct NodoCausa *causas) {
-    struct Causa * tempCausa = NULL;
-    char *tempImputado = NULL;
-
-    tempCausa = buscarCausaPorRuc(causas,leerCadena("Ingrese el RUC de la causa que desea modificar(Max 14 caracteres):"));
-    if (tempCausa == NULL) {
-        printf("El RUC ingresado no se encontro en ninguna causa.\n");
-        return;
-    }
-
-    tempImputado = buscarImputadoEnCarpeta(tempCausa->investigacion, leerCadena("Ingrese el RUT que desea modificar:"));
-    if (tempImputado == NULL) {
-        printf("El RUT ingresado no se encontro en el arreglo de imputados.");
-        return;
-    }
-
-}*/
-
 /*Funcion modificarDatos: Menu donde se encuentran las opciones para modificar datos
 de un SIAU. Recibe por parametro una estructura SIAU.*/
 void modificarDatos(struct SIAU * siau) {
@@ -1677,7 +1695,7 @@ void modificarDatos(struct SIAU * siau) {
                     break;
             case 7:
                 /*Modificar imputado en carpeta*/
-                    /*modificarImputado(siau->causas);*/
+                    modificarImputado(siau->causas);
                     break;
             case 8:
                 /*Volver atras*/
@@ -1760,7 +1778,8 @@ void borrarDatos(struct SIAU * siau) {
 /*Funcion otrasOpciones: Menu donde se encuentran opciones varias.
 Recibe por parametro una estructura SIAU.*/
 void otrasOpciones(struct SIAU * siau/*, int estado*/) {
-    int opcion = 0;
+    struct Causa *tempCausa = NULL;
+    int opcion = 0, lecturaEstado, resultadoOperacion;
     while(opcion != 7){
         limpiarConsola();
         printf("===========================================================\n");
@@ -1770,7 +1789,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
         printf("2- Mostrar resoluciones judiciales de imputado.\n");
         printf("3- Mostrar resoluciones judiciales por tipo de resolucion.\n");
         printf("4- Generar reporte estadistico.\n");
-        printf("5- Eliminar causas con estado cerrado.\n");
+        printf("5- Funcion extra 1.\n");
         printf("6- Generar reporte de imputados.\n");
         printf("7- Volver atras.\n");
         printf("Ingrese una opcion:");
@@ -1779,14 +1798,27 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
         switch(opcion){
 
             case 1:
+                resultadoOperacion = 0;
+                printf("Considere que (1-En investigacion)(2-Cerrada)(3-Archivada)(4-En juicio).\n");
+                printf("Ingrese el Estado que quiere consultar:");
+                leerOpcion(&lecturaEstado,1,4);
+                lecturaEstado -= 1;
+                mostrarCausasPorEstado(siau->causas,lecturaEstado,&resultadoOperacion);
+                if (resultadoOperacion == 0)
+                    printf("No se encontraron causas en ese estado.\n");
 
-                /*  Mostrar causas*/
-                    //faltaria pasar el estado según el estado
-                    /*mostrarCausasPorEstado(siau->causas,estado);*/
                 break;
 
             case 2:
-                /*Mostrar resoluciones judiciales de imputado*/
+                tempCausa = buscarCausaPorRuc(siau->causas,leerCadena("Ingrese el RUC de la causa en la que quiere consultar:"));
+                if (tempCausa != NULL) {
+                    resultadoOperacion = 0;
+                    mostrarResolucionesJudicialesDeImputado(tempCausa->investigacion, leerCadena("Ingrese el RUT del imputado(Max 13 caracteres):"),&resultadoOperacion);
+                    if (resultadoOperacion == 0)
+                        printf("No se encontraron resoluciones judiciales para el imputado.");
+                }else {
+                    printf("El RUC ingresado no se encontro en nignuna causa.");
+                }
                 break;
 
             case 3:
