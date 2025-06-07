@@ -91,6 +91,8 @@ void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const cha
 struct Causa *buscarCausaPorRuc(struct NodoCausa *causas, char *ruc);
 struct Registro *buscarRegistroPorId(struct Carpeta * carpeta, int tipo, int idRegistro);
 char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado);
+void buscarEnCarpeta(struct SIAU *siau, int tipo);
+
 
 void modificarCausa(struct NodoCausa * causas);
 int modificarEstadoCausa();
@@ -106,6 +108,14 @@ struct NodoCausa *eliminarCausa(struct NodoCausa *raiz, char *rucCausa, int *eli
 void eliminarCausaEnArbol(struct SIAU *siau);
 void eliminarImputado(char **imputados, int *cantImputados, char *rutImputado);
 void eliminarImputadoDeCausa(struct SIAU *siau);
+
+void contarImputadosTotales(struct NodoCausa *raiz, int *contador);
+char * buscarImputadoEnArreglo(char **arreglo, int pLibre, char *buscado);
+void llenarArregloImputados(struct NodoCausa *raiz, char **arreglo, int *pLibre);
+int obtenerImputados(struct SIAU *siau, char ***arregloImputados);
+void contarCausasImputado(struct NodoCausa *raiz, char *buscado, int *contador);
+void mostrarCantCausasPorImputado(struct SIAU *siau, char **arreglo, int pLibre);
+void reporteImputados(struct SIAU *siau);
 
 
 
@@ -382,13 +392,13 @@ int agregarImputado(struct SIAU *siau){
     char *nuevoImputado = NULL, *rucBuscado = NULL, *imputadoBuscado = NULL;
     int pLibre;
 
-    rucBuscado = leerCadena("Ingrese el RUC de la causa a la que quiere acceder(Max 100 caracteres):");
+    rucBuscado = leerCadena("Ingrese el RUC de la causa a la que quiere acceder(Max 14 caracteres):");
     causaBuscada = buscarCausaPorRuc(siau->causas, rucBuscado);
 
     if(causaBuscada == NULL)
         return -2;/*No existe la causa*/
 
-    nuevoImputado = leerCadena("Ingrese el RUT del nuevo imputado(Max 100 caracteres):");
+    nuevoImputado = leerCadena("Ingrese el RUT del nuevo imputado(Max 13 caracteres):");
 
     imputadoBuscado = buscarImputadoEnCarpeta(causaBuscada->investigacion, nuevoImputado);
 
@@ -628,6 +638,40 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
     }
     return NULL;
 }
+
+void buscarEnCarpeta(struct SIAU *siau, int tipo) {
+    struct Causa * tempCausa = NULL;
+    struct Registro * tempRegistro = NULL;
+    char *tempImputado;
+    int idBuffer;
+
+    tempCausa = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa buscada(Max 14 caracteres):"));
+    if (tempCausa == NULL) {
+        printf("No se encontro ninguna causa con ese RUC.\n");
+        return;
+    }
+
+    if (tipo != 5){
+        printf("Ingrese el ID de la causa buscada:");
+        scanf("%d", &idBuffer);
+        tempRegistro = buscarRegistroPorId(tempCausa->investigacion,tipo,idBuffer);
+        if (tempRegistro == NULL) {
+            printf("No se encontro ningun registro con esa ID.\n");
+            return;
+        }
+        imprimirRegistro(tempRegistro);
+        return;
+    }
+
+    tempImputado = buscarImputadoEnArreglo(tempCausa->investigacion->imputados, tempCausa->investigacion->cantImputados, leerCadena("Ingrese el RUT del imputado a buscar(Max 13 caracteres):"));
+    if (tempImputado == NULL) {
+        printf("No se encontro ningun imputado con ese RUT.\n");
+        return;
+    }
+    printf("El imputado se encuentra dentro del arreglo.");
+    return;
+}
+
 //-----------------------------------------------------------------------------------------------
 
 /*----------------------------------------------------------------------------------------------------------*/
@@ -1081,6 +1125,163 @@ void eliminarImputadoDeCausa(struct SIAU *siau) {
     }
 }
 
+/*----------------------------------------------------------------------------------------------------------*/
+/*------------------------------- FUNCIONES EXTRA DE LOS REQUISITOS ----------------------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
+
+/*Funcion contarImputadosTotales: Encargada de contar aproximadamente cuantos imputados
+totales existen en el sistema. No es precisa del todo debido a que un imputado puede existir en multiples
+causas. Recibe por parametro la raiz del arbol de causas, y un puntero a un contador. El
+puntero del contador es por que la funcion tiene un modelo recursivo, por lo que necesitamos
+mantener el acceso a esta variable para cumplir la labor correctamente.*/
+void contarImputadosTotales(struct NodoCausa *raiz, int *contador){
+
+    if(raiz == NULL)
+        return;
+
+    *(contador) += raiz->datosCausa->investigacion->cantImputados;
+
+    contarImputadosTotales(raiz->izq, contador);
+    contarImputadosTotales(raiz->der, contador);
+
+    return;
+}
+
+/*Funcion buscarImputadoEnArreglo: Funcion encargada de revisar si un imputado ya se encuentra
+en el arreglo general de imputados. Si lo encuentra, retorna la referencia a ese rut, sino, retorna
+NULL.*/
+char * buscarImputadoEnArreglo(char **arreglo, int pLibre, char *buscado){
+    int x;
+
+    for(x = 0; x < pLibre ; x++)
+        if(strcmp(arreglo[x],buscado) == 0)
+            return arreglo[x];
+
+    return NULL;
+}
+
+/*Funcion llenarArregloImputados: Se encarga de pasar los ruts de los imputados en cada causa
+a el arreglo de imputados general del sistema. Se basa en un modelo recursivo. Recibe por
+parametros la raiz del arbol de causas, el arreglo de imputados general, y un puntero a su
+correspondiente pLibre. El pLibre llega con puntero debido a la recursividad, con la intencion
+de tener siempre disponible esa variable.*/
+void llenarArregloImputados(struct NodoCausa *raiz, char **arreglo, int *pLibre){
+    char **arregloEnCarpeta;
+    int x, tope;
+
+    if(raiz == NULL)
+        return;
+
+    arregloEnCarpeta = raiz->datosCausa->investigacion->imputados;
+    tope = raiz->datosCausa->investigacion->cantImputados;
+
+    for(x = 0; x < tope; x++){
+        if(buscarImputadoEnArreglo(arreglo, *(pLibre), arregloEnCarpeta[x]) == NULL){
+            arreglo[*(pLibre)] = arregloEnCarpeta[x];
+            *(pLibre) += 1;
+        }
+    }
+
+    llenarArregloImputados(raiz->izq, arreglo, pLibre);
+
+    llenarArregloImputados(raiz->der, arreglo, pLibre);
+
+    return;
+}
+
+/*Funcion obtenerImputados: Encargada de generar un arreglo de tamanio aproximado(Puede
+ser justo, o mayor) de imputados existentes en el sistema. Si alguno de los imputados esta
+presente en mas de una causa, se generaran casillas extra, por lo mismo se retorna pLibre.
+Recibe por parametros la estructura siua, y un puntero al arreglo de imputados (Es un triple
+puntero por que necesitamos cambiar la referencia del arreglo con el malloc)*/
+int obtenerImputados(struct SIAU *siau, char ***arregloImputados){
+    int nImputados = 0, pLibre = 0;
+
+    contarImputadosTotales(siau->causas, &nImputados);
+
+    if(nImputados == 0)return 0;
+    *(arregloImputados) = (char **) malloc(nImputados * sizeof(char*));
+
+    llenarArregloImputados(siau->causas, *(arregloImputados), &pLibre);
+
+    return pLibre;
+}
+
+/*Funcion contarCausasImputado: Se encarga de contar en cuantas causas se encuentra
+presente un imputado. Recibe por parametro la raiz del arbol de causas, una cadena
+correspondiente al rut del imputado, y un puntero a un contador. El modelo para recorrer
+el arbol es recursivo, por eso mismo se pasa el contador por referencia.*/
+void contarCausasImputado(struct NodoCausa *raiz, char *buscado, int *contador){
+    char **arregloEnCarpeta = NULL;
+    int x, tope;
+
+    if(raiz == NULL)
+        return;
+
+    tope = raiz->datosCausa->investigacion->cantImputados;
+    arregloEnCarpeta = raiz->datosCausa->investigacion->imputados;
+    for(x = 0; x < tope ; x++){
+        if(strcmp(buscado,arregloEnCarpeta[x]) == 0){
+            *(contador) += 1;
+            break;
+        }
+    }
+
+    contarCausasImputado(raiz->izq, buscado, contador);
+
+    contarCausasImputado(raiz->der, buscado, contador);
+
+    return;
+
+}
+
+/*Funcion mostrarCantCausasPorImputado: Su proposito es printear los datos de
+cada imputado existente en el sistema, diciendo en cuantas causas esta presente. Recibe
+por parametro la estructura siau, el arreglo de imputados de todo el sistema, y el pLibre
+del arreglo mencionado.*/
+void mostrarCantCausasPorImputado(struct SIAU *siau, char **arreglo, int pLibre){
+    int x, nCausas;
+
+    for(x = 0; x < pLibre; x++){
+        nCausas = 0;
+        printf("%s - ",arreglo[x]);
+        contarCausasImputado(siau->causas, arreglo[x], &nCausas);
+        printf("Presente en %d causas.\n",nCausas);
+    }
+
+    return;
+}
+
+/*Funcion reporteImputados: Encargada de generar un reporte de cuantos imputados existen en el
+sistema, y para cada uno de ellos contar en cuantas causas estan presente. Recibre por
+parametro la estructura siau.*/
+void reporteImputados(struct SIAU *siau){
+    char **arregloImputados = NULL;
+    char bufferPausa[11];
+    int pLibreImputados;
+
+    pLibreImputados = obtenerImputados(siau, &arregloImputados);
+    if(arregloImputados == NULL || pLibreImputados == 0){
+        printf("No existen imputados en el sistema.\n");
+        return;
+    }
+
+    printf("===========================================================\n");
+    printf("                   REPORTE DE IMPUTADOS                    \n");
+    printf("===========================================================\n\n");
+    printf("Existen %d imputados totales en el sistema.\n",pLibreImputados);
+    printf("Cantidad de causas que tiene cada imputado:\n");
+    mostrarCantCausasPorImputado(siau, arregloImputados, pLibreImputados);
+    printf("Ingrese cualquier digito para volver atras:");
+    scanf("%s",bufferPausa);
+
+    return;
+}
+
+
+
+
+
 // ----------------------------------------------------------------------------------
 
 
@@ -1111,7 +1312,7 @@ void limpiarConsola() {
 a un SIAU. Recibe por parametro una estructura SIAU.*/
 void agregarDatos(struct SIAU *siau){
     struct Causa *tempCausa;
-    int opcion = 0;
+    int opcion = 0, resultadoOperacion;
     while(opcion != 8){
         /*limpiarConsola();*/
         printf("===========================================================\n");
@@ -1170,6 +1371,15 @@ void agregarDatos(struct SIAU *siau){
 
             case 7:
                 /*Agregar imputado a carpeta*/
+                resultadoOperacion = agregarImputado(siau);
+                if (resultadoOperacion == -2)
+                    printf("El RUC ingresado no se encontro en ninguna causa.\n");
+                else if (resultadoOperacion == -1)
+                    printf("El RUT del imputado ya existe.\n");
+                else if (resultadoOperacion == 0)
+                    printf("El arreglo de imputados se quedo sin espacio.\n");
+                else
+                    printf("El imputado se agrego correctamente.\n");
                 break;
 
             case 8:
@@ -1284,9 +1494,11 @@ void listarDatos(struct SIAU *siau) {
 }
 /*----------------------------------------------------------------------------------------------*/
 
+
 /*Funcion buscarDatos: Menu donde se encuentran las opciones para buscar datos
 en un SIAU. Recibe por parametro una estructura SIAU.*/
 void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char * rutBuscado*/) {
+    struct Causa * tempCausa = NULL;
     int opcion = 0;
     while(opcion != 8){
         limpiarConsola();
@@ -1308,40 +1520,41 @@ void buscarDatos(struct SIAU * siau/*, int tipo, int id, char * rucBuscado, char
             // falta mandar como parametro el rucBuscado
             case 1:
                 /*Buscar causa por RUC*/
-                    /*buscarCausaPorRuc(siau->causas, rucBuscado);*/
+                    tempCausa = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa buscada(Max 14 caracteres):"));
+                    if (tempCausa != NULL)
+                        imprimirCausa(tempCausa);
                 break;
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
                     // faltaria el número del arreglo y el id del registro para cada caso correspondiente
                     /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
+                        buscarEnCarpeta(siau,0);
 
                 break;
 
             case 3:
                 /*Buscar declaracion en carpeta por id*/
-                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
-
+                    buscarEnCarpeta(siau,1);
                 break;
 
             case 4:
                 /*Buscar prueba en carpeta por id*/
-                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
-
+                    buscarEnCarpeta(siau,2);
                 break;
 
             case 5:
                 /*Buscar diligencia en carpeta por id*/
-                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
+                    buscarEnCarpeta(siau,3);
                 break;
 
             case 6:
                 /*Buscar resolucion judicial en carpeta por id*/
-                    /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
+                    buscarEnCarpeta(siau,4);
                 break;
             case 7:
                 /*Buscar imputado por RUT*/
-                    /*buscarImputadoEnCarpeta(siau->causas->datosCausa->investigacion,rutBuscado);*/
+                    buscarEnCarpeta(siau,5);
                 break;
 
             case 8:
@@ -1497,7 +1710,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
         printf("3- Mostrar resoluciones judiciales por tipo de resolucion.\n");
         printf("4- Generar reporte estadistico.\n");
         printf("5- Eliminar causas con estado cerrado.\n");
-        printf("6- Funcion extra 2.\n");
+        printf("6- Generar reporte de imputados.\n");
         printf("7- Volver atras.\n");
         printf("Ingrese una opcion:");
         leerOpcion(&opcion,1,7);
@@ -1529,6 +1742,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 
             case 6:
                 /*Funcion extra 2*/
+                    reporteImputados(siau);
                 break;
 
             case 7:
