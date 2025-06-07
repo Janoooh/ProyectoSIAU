@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#define MAX_IMPUTADOS 60
+#define MAX_IMPUTADOS 50
 
 /*===================================================================*/
 /*===============DEFINICION DE STRUCTS PARA EL PROGRAMA==============*/
@@ -120,7 +120,7 @@ char * leerCadena(char *mensaje){
 
     /*Mostramos el mensaje indicatorio de que debe ingresar el usuario.*/
     printf("%s",mensaje);
-    scanf(" %s",buffer);/*Leemos la cadena de texto.*/
+    scanf(" %[^\n]",buffer);/*Leemos la cadena de texto.*/
     printf("\n");
 
     nCaracteres = (int)strlen(buffer);/*Obtenemos la longitud de la cadena leida*/
@@ -602,13 +602,14 @@ char* buscarImputadoEnCarpeta(struct Carpeta * carpeta, const char * rutBuscado)
 /*------------------------ FUNCIONES RELACIONADAS CON MODIFICAR LOS DATOS ----------------------------------*/
 /*----------------------------------------------------------------------------------------------------------*/
 
+
 /* Funcion que valida la modificacion de un registro, si todo esta bien llama a la funcion de modificar*/
 void validarModificacionRegistros(struct SIAU * siau, int tipo) {
     struct Causa *causaBuscada;
     struct Registro *registroBuscado;
     int idBuscado;
 
-    causaBuscada = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la denuncia a modificar : "));
+    causaBuscada = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa a modificar : "));
     printf("Ingrese el ID del registro buscado : ");
     scanf("%d", &idBuscado);
     if (causaBuscada != NULL && causaBuscada->investigacion != NULL) {
@@ -620,6 +621,50 @@ void validarModificacionRegistros(struct SIAU * siau, int tipo) {
     }
     else
         printf("No existe.\n");
+}
+
+/*Funcion modificarRegistro: Menu donde se encuentran las opciones para modificar datos
+de un registro. Recibe por parametro una estructura Registro y la carpeta.
+Esta ultima es necesaria por si se quiere cambiar el tipo del registro*/
+void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
+    int opcion = 0;
+    while(opcion != 5){
+        limpiarConsola();
+        printf("                 --------------------                      \n");
+        printf("                | Modificar Registro |                     \n");
+        printf("                 --------------------                      \n");
+        printf("1) Modificar persona involucrada.\n");
+        printf("2) Modificar fecha del registro.\n");
+        printf("3) Modificar descripcion del registro.\n");
+        printf("4) Modificar el tipo del registro.\n");
+        printf("5) Volver atras.\n");
+        printf("Ingrese una opcion:");
+        leerOpcion(&opcion,1,5);
+        switch(opcion){
+            case 1:
+                registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada: ");
+            break;
+
+            case 2:
+                registro->fechaRegistro = leerCadena("Ingrese la nueva fecha: ");
+            break;
+
+            case 3:
+                registro->detalle = leerCadena("Ingrese la nueva descripcion del registro: ");
+            break;
+
+            case 4:
+                modificarTipoRegistro(registro, carpeta->registros);
+            break;
+
+            case 5:
+                return;
+
+            default:
+                printf("Error.");
+        }
+    }
+    return;
 }
 
 /*Funcion modificarTipoRegistro: Menu donde se encuentran las opciones para modificar el
@@ -690,50 +735,6 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
                 break;
 
             case 6:
-                return;
-
-            default:
-                printf("Error.");
-        }
-    }
-    return;
-}
-
-/*Funcion modificarRegistro: Menu donde se encuentran las opciones para modificar datos
-de un registro. Recibe por parametro una estructura Registro y la carpeta.
-Esta ultima es necesaria por si se quiere cambiar el tipo del registro*/
-void modificarRegistro(struct Registro *registro, struct Carpeta *carpeta) {
-    int opcion = 0;
-    while(opcion != 5){
-        limpiarConsola();
-        printf("                 --------------------                      \n");
-        printf("                | Modificar Registro |                     \n");
-        printf("                 --------------------                      \n");
-        printf("1) Modificar persona involucrada.\n");
-        printf("2) Modificar fecha del registro.\n");
-        printf("3) Modificar descripcion del registro.\n");
-        printf("4) Modificar el tipo del registro.\n");
-        printf("5) Volver atras.\n");
-        printf("Ingrese una opcion:");
-        leerOpcion(&opcion,1,5);
-        switch(opcion){
-            case 1:
-                    registro->involucrado = leerCadena("Ingrese el nuevo RUT de la persona involucrada: ");
-                    break;
-
-            case 2:
-                    registro->fechaRegistro = leerCadena("Ingrese la nueva fecha: ");
-                    break;
-
-            case 3:
-                    registro->detalle = leerCadena("Ingrese la nueva descripcion del registro: ");
-                    break;
-
-            case 4:
-                    modificarTipoRegistro(registro, carpeta->registros);
-                    break;
-
-            case 5:
                 return;
 
             default:
