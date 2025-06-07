@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #define MAX_IMPUTADOS 50
+#define CLAVE_ACCESO "ProyectoSiau2025"
 
 /*===================================================================*/
 /*===============DEFINICION DE STRUCTS PARA EL PROGRAMA==============*/
@@ -56,6 +57,7 @@ struct Registro {
 /*=============DEFINICION DE FUNCIONES PARA EL PROGRAMA==============*/
 /*===================================================================*/
 
+int loginPrograma();
 void leerOpcion(int *opcion, int limInf, int limSup);
 void limpiarConsola();
 
@@ -110,6 +112,34 @@ void eliminarImputadoDeCausa(struct SIAU *siau);
 /*----------------------------------------------------------------------------------------------------------*/
 /*-------------------------- FUNCIONES RELACIONADA CON AGREGAR Y CREAR DATOS -------------------------------*/
 /*----------------------------------------------------------------------------------------------------------*/
+
+/*Funcion loginPrograma: Se encarga de autenticar a las personas que entran al sistema, de modo
+ que solo las personas que conozcan la clave definida por el programador podran acceder.
+ Retorna un 0 si la sesion se inicio correctamente, o un 7 si se instruyo cerrar el programa.
+ (El 7 es para que no entre en el ciclo del menu principal).*/
+int loginPrograma() {
+    char buffer[31];
+    printf("===========================================================\n");
+    printf("======================Inicio de sesion=====================\n");
+    printf("===========================================================\n");
+    printf("Sistema de informacion y atencion a usuarios.\n");
+    printf("Favor de ingresar la clave de acceso(Max 30 caracteres, sin espacios):");
+    scanf("%s",buffer);
+    if (strcmp(CLAVE_ACCESO,buffer) == 0) {
+        return 0;
+    }else {
+        while (1) {
+            printf("\nClave incorrecta, probar nuevamente, o ingresar CERRAR para salir:");
+            scanf("%s",buffer);
+            if (strcmp(CLAVE_ACCESO,buffer) == 0) {
+                return 0;
+            }else if(strcmp("CERRAR",buffer) == 0) {
+                return 7;
+            }
+        }
+    }
+
+}
 
 /*Funcion leerCadena: Encargada de leer una cadena de texto ingresada por el usuario. Lo leido
 se almacena en un buffer temporal, para despues traspasarlo a una nueva cadena dinamica, reservandole
@@ -1522,6 +1552,9 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 int main(void) {
     struct SIAU *siau = NULL;
     int opcion = 0;
+
+    opcion = loginPrograma();
+    printf("La sesion se inicio correctamente!");
 
     siau = (struct SIAU*)malloc(sizeof(struct SIAU));
     siau->causas = NULL;
