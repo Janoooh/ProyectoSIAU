@@ -117,7 +117,8 @@ void contarCausasImputado(struct NodoCausa *raiz, char *buscado, int *contador);
 void mostrarCantCausasPorImputado(struct SIAU *siau, char **arreglo, int pLibre);
 void reporteImputados(struct SIAU *siau);
 
-
+void ImprimeTipoDeResolucion(struct NodoRegistro *head, char *tipo);
+void mostrarPorTipoDeResolucion(struct SIAU *siau);
 
 /*----------------------------------------------------------------------------------------------------------*/
 /*-------------------------- FUNCIONES RELACIONADA CON AGREGAR Y CREAR DATOS -------------------------------*/
@@ -1278,12 +1279,52 @@ void reporteImputados(struct SIAU *siau){
     return;
 }
 
+/*Funcion que recorre la lista simplemente enlazada de las resoluciones judiciales e imprime si la resolucion es del tipo buscado*/
+void ImprimeTipoDeResolucion(struct NodoRegistro *head, char *tipo) {
+    struct NodoRegistro *rec = head;
+    while (rec != NULL) {
+        if (strcmp(rec->dataRegistro->detalle, tipo) == 0) {
+            imprimirRegistro(rec->dataRegistro);
+        }
+        rec = rec->sig;
+    }
+}
+
+/*Funcion que imprime un tipo especifico de resolucion judicial de cierta Causa*/
+void mostrarPorTipoDeResolucion(struct SIAU *siau) {
+    struct Causa *causa = NULL;
+    char rucCausa[16], tipoDeResolucion[30];
+
+    /*Consulta sobre datos*/
+    printf("Ingrese el RUC de la Causa a la que desea ver sus resoluciones judiciales: ");
+    scanf("%s", rucCausa);
+    printf("Ingrese el tipo de resolucion que desea mostrar\n");
+    printf("Ejemplo: 'Sentencia', 'Sobreseimiento', 'AutorizacionDiligencia', 'MedidaCautelar' o 'MedidaProteccion': ");
+    scanf("%s", tipoDeResolucion);
+
+    /*Se busca la causa y se valida de que exista*/
+    causa = buscarCausaPorRuc(siau->causas, rucCausa);
+    if (causa != NULL) {
+        /*Validar de que existe los campos interiores antes de ingresar a los registros judiciales*/
+        if (causa->investigacion != NULL && causa->investigacion->registros != NULL) {
+            ImprimeTipoDeResolucion(causa->investigacion->registros[4], tipoDeResolucion);
+        }
+        else {
+            printf("No hay datos necesarios dentro de la Causa.\n");
+        }
+    }
+    else{
+        printf("No se encontro la Causa con RUC %s.\n", rucCausa);
+    }
+}
+
+
+
 
 
 
 
 // ----------------------------------------------------------------------------------
-
 
 /*Funcion leerOpcion: Encargada de leer una opcion para un menu con cierta cantidad de opciones.
  Recibe por parametros una variable donde se leera la opcion, y dos limites(uno inferior y
@@ -1750,6 +1791,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 
             case 3:
                 /*Mostrar resoluciones judiciales por tipo de resolucion*/
+                    mostrarPorTipoDeResolucion(siau);
                 break;
 
             case 4:
