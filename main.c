@@ -686,9 +686,13 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
         switch(opcion){
             case 1:
                 if (registro->tipo != 0) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Denuncia");
-                    registro->tipo = 0;
-                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    if (buscarRegistroPorId(carpeta, 0, registro->id) == NULL){
+                        eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Denuncia");
+                        registro->tipo = 0;
+                        agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    }
+                    else
+                        printf("Ese id ya esta tomado.\n");
                 }
                 else
                     printf("El registro ya tiene ese tipo.\n");
@@ -696,9 +700,13 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 2:
                 if (registro->tipo != 1) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Declaracion");
-                    registro->tipo = 1;
-                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    if(buscarRegistroPorId(carpeta, 1, registro->id) == NULL){
+                        eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Declaracion");
+                        registro->tipo = 1;
+                        agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    }
+                    else
+                        printf("Ese id ya esta tomado.\n");
                 }
                 else
                     printf("El registro ya tiene ese tipo.\n");
@@ -706,9 +714,13 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 3:
                 if (registro->tipo != 2) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Prueba");
-                    registro->tipo = 2;
-                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    if(buscarRegistroPorId(carpeta, 2, registro->id) == NULL){
+                        eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Prueba");
+                        registro->tipo = 2;
+                        agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    }
+                    else
+                        printf("Ese id ya esta tomado.\n");
                 }
                 else
                     printf("El registro ya tiene ese tipo.\n");
@@ -716,9 +728,13 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 4:
                 if (registro->tipo != 3) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Diligencia");
-                    registro->tipo = 3;
-                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    if(buscarRegistroPorId(carpeta, 3, registro->id) == NULL){
+                        eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Diligencia");
+                        registro->tipo = 3;
+                        agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    }
+                    else
+                        printf("Ese id ya esta tomado.\n");
                 }
                 else
                     printf("El registro ya tiene ese tipo.\n");
@@ -726,9 +742,13 @@ void modificarTipoRegistro(struct Registro *registro, struct Carpeta *carpeta) {
 
             case 5:
                 if (registro->tipo != 4) {
-                    eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Resolucion Judicial");
-                    registro->tipo = 4;
-                    agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    if (buscarRegistroPorId(carpeta, 4, registro->id) == NULL){
+                        eliminarRegistro(&carpeta->registros[registro->tipo], registro->id, "Resolucion Judicial");
+                        registro->tipo = 4;
+                        agregarRegistroAlista(&carpeta->registros[registro->tipo], registro);
+                    }
+                    else
+                        printf("Ese id ya esta tomado.\n");
                 }
                 else
                     printf("El registro ya tiene ese tipo.\n");
