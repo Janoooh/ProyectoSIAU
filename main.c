@@ -546,26 +546,26 @@ void listarCarpetas(struct Carpeta *carpeta, int parametro) {
  imprimir Causas e imprimir Registros
 */
 
-// Mostrar Causas por estado
-void mostrarCausasPorEstado(struct NodoCausa * raiz, int estado, int *seImprimio)// 1,2,3 o 4
+/* Mostrar Causas por estado*/
+void mostrarCausasPorEstado(struct NodoCausa * raiz, int estado, int *seImprimio)/* 1,2,3 o 4 */
 {
     if (raiz == NULL) return;
-    //1.- Se recorre el subArbol izquierdo
+    /*1.- Se recorre el subArbol izquierdo*/
     mostrarCausasPorEstado(raiz->izq, estado, seImprimio);
 
-    // si el estado es igual, imprimimos la causa usando la función de imprimir causa
+    /*si el estado es igual, imprimimos la causa usando la función de imprimir causa*/
     if (raiz->datosCausa != NULL && raiz->datosCausa->estado == estado)
     {
-        // falta implementar la función
+        /*falta implementar la función*/
         imprimirCausa(raiz->datosCausa);
         *(seImprimio) = 1;
     }
 
-    // Recorre a la derecha
+    /*Recorre a la derecha*/
     mostrarCausasPorEstado(raiz->der, estado, seImprimio);
 }
 
-//Mostrar resoluciones judiciales de imputado
+/*Mostrar resoluciones judiciales de imputado*/
 
 void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const char * imputadoBuscado, int *seImprimio)
 {
@@ -575,7 +575,7 @@ void mostrarResolucionesJudicialesDeImputado(struct Carpeta * carpeta, const cha
 
     while (actual != NULL)
     {
-        // compara si existe el imputado y si lo está lo imprime
+        /*compara si existe el imputado y si lo está lo imprime*/
         if (actual->dataRegistro->involucrado != NULL && strcmp(actual->dataRegistro->involucrado, imputadoBuscado) == 0)
         {
             imprimirRegistro(actual->dataRegistro);
@@ -681,7 +681,7 @@ void buscarEnCarpeta(struct SIAU *siau, int tipo) {
     return;
 }
 
-//-----------------------------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------------------------------*/
 /*------------------------ FUNCIONES RELACIONADAS CON MODIFICAR LOS DATOS ----------------------------------*/
@@ -1485,7 +1485,7 @@ void generarReporteEstadistico(struct SIAU *siau) {
 
 
 
-// ----------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------------*/
 
 /*Funcion leerOpcion: Encargada de leer una opcion para un menu con cierta cantidad de opciones.
  Recibe por parametros una variable donde se leera la opcion, y dos limites(uno inferior y
@@ -1719,7 +1719,7 @@ void buscarDatos(struct SIAU * siau /*char * rutBuscado*/) {
         leerOpcion(&opcion,1,8);
         printf("\n");
         switch(opcion){
-            // falta mandar como parametro el rucBuscado
+            /* falta mandar como parametro el rucBuscado*/
             case 1:
                 /*Buscar causa por RUC*/
                     tempCausa = buscarCausaPorRuc(siau->causas, leerCadena("Ingrese el RUC de la causa buscada(Max 14 caracteres):"));
@@ -1729,7 +1729,7 @@ void buscarDatos(struct SIAU * siau /*char * rutBuscado*/) {
 
             case 2:
                 /*Buscar denuncia en carpeta por id*/
-                    // faltaria el número del arreglo y el id del registro para cada caso correspondiente
+                    /* faltaria el número del arreglo y el id del registro para cada caso correspondiente*/
                     /*buscarRegistroPorId(siau->causas->datosCausa->investigacion, tipo, id);*/
                         buscarEnCarpeta(siau,0);
 
