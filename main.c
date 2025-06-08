@@ -74,6 +74,7 @@ char * leerCadena(char *mensaje);
 int agregarCausa(struct NodoCausa **raiz, struct Causa *nuevaCausa);
 struct Causa * crearCausa();
 struct Registro * crearRegistro(int tipoRegistro);
+void agregarRegistroAlista(struct NodoRegistro **lista, struct Registro *registro);
 int agregarRegistro(struct SIAU *siau, struct Registro *nuevo);
 void codigoAgregarRegistroMenu(struct SIAU *siau, int tipoRegistro);
 int agregarImputado(struct SIAU *siau);
@@ -329,9 +330,6 @@ struct Registro * crearRegistro(int tipoRegistro){
 
 }
 
-
-
-
 void agregarRegistroAlista(struct NodoRegistro **lista, struct Registro *registro) {
     struct NodoRegistro *nuevo;
     nuevo = (struct NodoRegistro *) malloc(sizeof(struct NodoRegistro));
@@ -366,17 +364,12 @@ int agregarRegistro(struct SIAU *siau, struct Registro *nuevo){
     if(registroBuscado != NULL)
         return 0;/*El registro nuevo ya existe.*/
 
-    nuevoNodo = (struct NodoRegistro *) malloc(sizeof(struct NodoRegistro));
-    nuevoNodo->dataRegistro = nuevo;
-    nuevoNodo->sig = NULL;
-
     tipoRegistro = nuevo->tipo;
-
-    nuevoNodo->sig = causaBuscada->investigacion->registros[tipoRegistro];
-    causaBuscada->investigacion->registros[tipoRegistro] = nuevoNodo;
+    agregarRegistroAlista(&causaBuscada->investigacion->registros[tipoRegistro], nuevo);
 
     return 1;/*Se agrego el nuevo registro correctamente al inicio de la lista.*/
 }
+
 /*Funcion codigoAgregarRegistroMenu: Funcion para agregar un registro en el menu, funciona
  como interfaz de mensajes que entrega dependiendo del resultado de la accion que se realizo.
  Recibe por parametro el siau y el tipo de registro que se quiere agregar.
@@ -1463,7 +1456,7 @@ void imprimirReporteEstadistico(int causasAbiertas, int sentenciasCondenatorias,
     printf(" Causas en estado abierto: %d\n", causasAbiertas);
     printf(" Sentencias condenatorias registradas: %d\n", sentenciasCondenatorias);
     printf(" Archivos provisionales generados: %d\n", archivosProvisionales);
-    printf(" Medidas de protección activas: %d\n", medidasProteccion);
+    printf(" Medidas de proteccion activas: %d\n", medidasProteccion);
 
     printf("\n===========================================================\n");
     printf("                       FIN DEL REPORTE                     \n");
