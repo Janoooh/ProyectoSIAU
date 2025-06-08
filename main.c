@@ -124,7 +124,6 @@ void ImprimeTipoDeResolucion(struct NodoRegistro *head, char *tipo);
 void mostrarPorTipoDeResolucion(struct SIAU *siau);
 
 void imprimirReporteRegistros(struct SIAU * siau);
-void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
 void contarRegistrosPorNodo(struct NodoCausa * raiz, int *contadores);
 
 int recorrerYcontarTipoResolucion(struct NodoRegistro *head, char *tipoResolucion);
@@ -787,6 +786,7 @@ int modificarEstadoCausa(){
                 return -1;
         }
     }
+    return -1;
 }
 
 /* Funcion que valida la modificacion de un registro, si todo esta bien llama a la funcion de modificar*/
@@ -1362,17 +1362,17 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau) {
     }
 }
 
-/* Ultima función extra De mostrar o imprimir Registro */
+/*Funcion imprimirReporteRegistros: Encargada de hacer un reporte de cuantos
+ registros de cada tipo existen en todo el sistema. recibe por parametro la
+ estructura siau.*/
 void imprimirReporteRegistros(struct SIAU * siau)
 {
-    /*int denuncias = 0, declaraciones = 0, pruebas = 0,registrosDiligencias = 0, registrosResoluciones = 0;*/
-    int contadores[5];
+    int contadores[5];/*Contadores para cada tipo de registro*/
     int x;
 
     for (x = 0; x < 5; x++)
         contadores[x] = 0;
 
-    /*ContarRegistrosExistentes(siau, &denuncias, &declaraciones,&pruebas, &registrosDiligencias, &registrosResoluciones );*/
     contarRegistrosPorNodo(siau->causas, contadores);
 
     printf("===========================================================\n");
@@ -1386,35 +1386,35 @@ void imprimirReporteRegistros(struct SIAU * siau)
     printf("Cantidad total de resoluciones: %d\n" , contadores[4]);
 }
 
-/*Denuncias[0], Declaraciones, pruebas, registros diligencias,registros resoluciones
-void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas,int * diligencias, int * resoluciones )
-{
-    contarRegistrosPorNodo(siau->causas, cantDenuncias, declaraciones, pruebas, diligencias, resoluciones);
-
-}*/
-
+/*Funcion contarRegistrosPorNodo: Encargada de contar cuantos registros de cada
+ tipo existen dentro de cada causa. Recibe por parametros la raiz del arbol de causas y
+ el arreglo de contadores.*/
 void contarRegistrosPorNodo(struct NodoCausa * raiz, int *contadores)
 {
-    struct Carpeta *carpeta;
+    struct Carpeta *carpeta = NULL;
+    struct  NodoRegistro *actual = NULL;
     int i;
 
 
-    if ( raiz == NULL ) return; // caso Base
-    carpeta = raiz->datosCausa->investigacion;// vamos a la carpeta
+    if ( raiz == NULL ) return; /*caso Base*/
+    carpeta = raiz->datosCausa->investigacion;/*vamos a la carpeta*/
 
-    contarRegistrosPorNodo(raiz->izq, contadores);// recorre nodo izquierdo
+    contarRegistrosPorNodo(raiz->izq, contadores);/*recorre nodo izquierdo*/
 
 
-    // procesa el nodo
+    /*procesa el nodo*/
     if (carpeta != NULL)
     {
-        for (i = 0; i < 5;i++)// Recorremos el arreglo creado de punteros a los  contadores
+        for (i = 0; i < 5;i++)/*Recorremos el arreglo de contadores*/
         {
-            struct  NodoRegistro * actual = carpeta->registros[i];
+            actual = carpeta->registros[i];
+            if (i == 0)/*Contamos la denuncia inicial de la causa.*/
+                contadores[i]++;
+
             while (actual != NULL)
             {
-                contadores[i]++;// el contador en la i se incrementa
-                actual = actual->sig;// pasa al siguiente;
+                contadores[i]++;/*el contador de la posicion i se incrementa*/
+                actual = actual->sig;/*pasa al siguiente*/
             }
 
         }
@@ -1988,7 +1988,8 @@ int main(void) {
     int opcion = 0;
 
     opcion = loginPrograma();
-    printf("******* La sesion se inicio correctamente! *******");
+    if (opcion == 0)
+        printf("******* La sesion se inicio correctamente! *******");
 
     siau = (struct SIAU*)malloc(sizeof(struct SIAU));
     siau->causas = NULL;
