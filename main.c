@@ -125,7 +125,7 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau);
 
 void imprimirReporteRegistros(struct SIAU * siau);
 void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
-void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
+void contarRegistrosPorNodo(struct NodoCausa * raiz, int *contadores);
 
 int recorrerYcontarTipoResolucion(struct NodoRegistro *head, char *tipoResolucion);
 void contarTipoResolucionTotal(struct NodoCausa *raiz, int *contador, char *tipoResolucion);
@@ -349,7 +349,6 @@ y un 1 si se agrego correctamente.*/
 int agregarRegistro(struct SIAU *siau, struct Registro *nuevo){
     struct Causa *causaBuscada = NULL;
     struct Registro *registroBuscado = NULL;
-    struct NodoRegistro *nuevoNodo = NULL;
     char *rucBuscado = NULL;
     int tipoRegistro;
 
@@ -1366,35 +1365,44 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau) {
 /* Ultima función extra De mostrar o imprimir Registro */
 void imprimirReporteRegistros(struct SIAU * siau)
 {
-    int denuncias = 0, declaraciones = 0, pruebas = 0,registrosDiligencias = 0, registrosResoluciones = 0;
+    /*int denuncias = 0, declaraciones = 0, pruebas = 0,registrosDiligencias = 0, registrosResoluciones = 0;*/
+    int contadores[5];
+    int x;
 
-    ContarRegistrosExistentes(siau, &denuncias, &declaraciones,&pruebas, &registrosDiligencias, &registrosResoluciones );
+    for (x = 0; x < 5; x++)
+        contadores[x] = 0;
+
+    /*ContarRegistrosExistentes(siau, &denuncias, &declaraciones,&pruebas, &registrosDiligencias, &registrosResoluciones );*/
+    contarRegistrosPorNodo(siau->causas, contadores);
 
     printf("===========================================================\n");
     printf("====================Reporte de Registros===================\n");
     printf("===========================================================\n");
 
-    printf("Cantidad total de denuncias: %i\n", denuncias);
-    printf("Cantidad total de declaraciones: %i\n", declaraciones);
-    printf("Cantidad total de pruebas: %i\n" , pruebas);
-    printf("Cantidad total de diligencias: %i\n" , registrosDiligencias);
-    printf("Cantidad total de resoluciones: %i\n" , registrosResoluciones);
+    printf("Cantidad total de denuncias: %d\n", contadores[0]);
+    printf("Cantidad total de declaraciones: %d\n", contadores[1]);
+    printf("Cantidad total de pruebas: %d\n" , contadores[2]);
+    printf("Cantidad total de diligencias: %d\n" , contadores[3]);
+    printf("Cantidad total de resoluciones: %d\n" , contadores[4]);
 }
-/*Denuncias[0], Declaraciones, pruebas, registros diligencias,registros resoluciones*/
+
+/*Denuncias[0], Declaraciones, pruebas, registros diligencias,registros resoluciones
 void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas,int * diligencias, int * resoluciones )
 {
     contarRegistrosPorNodo(siau->causas, cantDenuncias, declaraciones, pruebas, diligencias, resoluciones);
 
-}
+}*/
 
-void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * declaraciones, int * pruebas, int * diligencias, int* resoluciones)
+void contarRegistrosPorNodo(struct NodoCausa * raiz, int *contadores)
 {
-    if ( raiz == NULL ) return; // caso Base
-    int * contadores[5] = { denuncias, declaraciones, pruebas, diligencias, resoluciones};// incializo punteros a los contadores en cada espacio
+    struct Carpeta *carpeta;
     int i;
-    struct Carpeta * carpeta = raiz->datosCausa->investigacion;// vamos a la carpeta
 
-    contarRegistrosPorNodo(raiz->izq,denuncias, declaraciones, pruebas, diligencias, resoluciones);// recorre nodo izquierdo
+
+    if ( raiz == NULL ) return; // caso Base
+    carpeta = raiz->datosCausa->investigacion;// vamos a la carpeta
+
+    contarRegistrosPorNodo(raiz->izq, contadores);// recorre nodo izquierdo
 
 
     // procesa el nodo
@@ -1405,13 +1413,13 @@ void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * decl
             struct  NodoRegistro * actual = carpeta->registros[i];
             while (actual != NULL)
             {
-                (*contadores[i])++;// el contador en la 0(denuncias) se incrementa
+                contadores[i]++;// el contador en la i se incrementa
                 actual = actual->sig;// pasa al siguiente;
             }
 
         }
     }
-    contarRegistrosPorNodo(raiz->der,denuncias, declaraciones,pruebas, diligencias, resoluciones);
+    contarRegistrosPorNodo(raiz->der, contadores);
 }
 
 
