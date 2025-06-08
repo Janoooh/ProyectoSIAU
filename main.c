@@ -29,7 +29,7 @@ struct Causa {
     char *ruc;
     struct Registro *denunciaInicial;
     struct Carpeta *investigacion;
-    int estado;
+    int estado; /*"0": "Investigacion", "1": "Cerrada", "2": "Archivada", "3": "En juicio"*/
 };
 
 struct Carpeta {
@@ -48,8 +48,9 @@ struct Registro {
     char *involucrado;
     char *fechaRegistro;
     char *detalle;
-    int tipo;
+    int tipo; /*"0": "Denuncia", "1": "Declaración", "2": "Prueba", "3": "Diligencia", "4": "Resolución judicial"*/
 };
+/*Para las Resoluciones judiciales: 'Sentencia', 'Sobreseimiento', 'AutorizacionDiligencia', 'MedidaCautelar', 'MedidaProteccion' o 'ArchivoProvisional'*/
 
 /*===================================================================*/
 
@@ -124,6 +125,12 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau);
 void imprimirReporteRegistros(struct SIAU * siau);
 void ContarRegistrosExistentes(struct SIAU * siau, int * cantDenuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
 void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * declaraciones, int * pruebas, int * diligencias, int * resoluciones);
+
+int recorrerYcontarTipoResolucion(struct NodoRegistro *head, char *tipoResolucion);
+void contarTipoResolucionTotal(struct NodoCausa *raiz, int *contador, char *tipoResolucion);
+void recorrerYcontarCausasAbiertas(struct NodoCausa *raiz, int *contador);
+void imprimirReporteEstadistico(int causasAbiertas, int sentenciasCondenatorias, int archivosProvisionales, int medidasProteccion);
+void generarReporteEstadistico(struct SIAU *siau);
 
 /*----------------------------------------------------------------------------------------------------------*/
 /*-------------------------- FUNCIONES RELACIONADA CON AGREGAR Y CREAR DATOS -------------------------------*/
@@ -1344,7 +1351,7 @@ void mostrarPorTipoDeResolucion(struct SIAU *siau) {
     printf("Ingrese el RUC de la Causa a la que desea ver sus resoluciones judiciales (Max 14 caracteres): ");
     scanf("%s", rucCausa);
     printf("Ingrese el tipo de resolucion que desea mostrar\n");
-    printf("Ejemplo: 'Sentencia', 'Sobreseimiento', 'AutorizacionDiligencia', 'MedidaCautelar' o 'MedidaProteccion': ");
+    printf("Ejemplo: 'Sentencia', 'Sobreseimiento', 'AutorizacionDiligencia', 'MedidaCautelar', 'MedidaProteccion' o 'ArchivoProvisional': ");
     scanf("%s", tipoDeResolucion);
 
     /*Se busca la causa y se valida de que exista*/
@@ -1413,6 +1420,68 @@ void contarRegistrosPorNodo(struct NodoCausa * raiz, int * denuncias, int * decl
     }
     contarRegistrosPorNodo(raiz->der,denuncias, declaraciones,pruebas, diligencias, resoluciones);
 }
+
+
+/*Funcion que recorre las resoluciones judiciales y cuenta (solo en una causa) un tipo especifico de resoluciones judiciales*/
+int recorrerYcontarTipoResolucion(struct NodoRegistro *head, char *tipoResolucion) {
+    struct NodoRegistro *rec = head;
+    int contador = 0;
+    while (rec != NULL) {
+        if (strcmp(rec->dataRegistro->detalle, tipoResolucion) == 0) {
+            contador++;
+        }
+        rec = rec->sig;
+    }
+    return contador;
+}
+
+/*Funcion que recorre recursivamente el arbol en in-orden y cuenta (el total en el sistema) un tipo especifico de resoluciones judiciales*/
+void contarTipoResolucionTotal(struct NodoCausa *raiz, int *contador, char *tipoResolucion) {
+    if (raiz == NULL) {
+        return;
+    }
+    contarTipoResolucionTotal(raiz->izq, contador, tipoResolucion);
+    if (raiz->datosCausa->investigacion != NULL && raiz->datosCausa->investigacion->registros[4] != NULL) (*contador) += recorrerYcontarTipoResolucion(raiz->datosCausa->investigacion->registros[4], tipoResolucion);
+    contarTipoResolucionTotal(raiz->der, contador, tipoResolucion);
+}
+
+/*Funcion que recorre recursivamente el arbol en in-orden y cuenta las causas en estado abiertas (estado 0: Investigacion, 3: En juicio)*/
+void recorrerYcontarCausasAbiertas(struct NodoCausa *raiz, int *contador) {
+    if (raiz == NULL) {
+        return;
+    }
+    recorrerYcontarCausasAbiertas(raiz->izq, contador);
+    if (raiz->datosCausa->estado == 0 || raiz->datosCausa->estado == 3) (*contador)++;
+    recorrerYcontarCausasAbiertas(raiz->der, contador);
+}
+
+void imprimirReporteEstadistico(int causasAbiertas, int sentenciasCondenatorias, int archivosProvisionales, int medidasProteccion) {
+    printf("===========================================================\n");
+    printf("                  REPORTE ESTADISTICO                      \n");
+    printf("===========================================================\n\n");
+
+    printf(" Causas en estado abierto: %d\n", causasAbiertas);
+    printf(" Sentencias condenatorias registradas: %d\n", sentenciasCondenatorias);
+    printf(" Archivos provisionales generados: %d\n", archivosProvisionales);
+    printf(" Medidas de protección activas: %d\n", medidasProteccion);
+
+    printf("\n===========================================================\n");
+    printf("                       FIN DEL REPORTE                     \n");
+    printf("===========================================================\n");
+}
+
+/*FUNCION PRINCIPAL: Genera reporte estadistico*/
+void generarReporteEstadistico(struct SIAU *siau) {
+    int causasAbiertas = 0, sentenciasCondenatorias = 0, archivosProvisionales = 0, medidasProteccion = 0;
+
+    recorrerYcontarCausasAbiertas(siau->causas, &causasAbiertas);
+    contarTipoResolucionTotal(siau->causas, &sentenciasCondenatorias, "Sentencia");
+    contarTipoResolucionTotal(siau->causas, &archivosProvisionales, "ArchivoProvisional");
+    contarTipoResolucionTotal(siau->causas, &medidasProteccion, "MedidaProteccion");
+
+    imprimirReporteEstadistico(causasAbiertas, sentenciasCondenatorias, archivosProvisionales, medidasProteccion);
+}
+
 
 
 // ----------------------------------------------------------------------------------
@@ -1882,6 +1951,7 @@ void otrasOpciones(struct SIAU * siau/*, int estado*/) {
 
             case 4:
                 /*Generar reporte estadistico*/
+                    generarReporteEstadistico(siau);
                 break;
 
             case 5:
