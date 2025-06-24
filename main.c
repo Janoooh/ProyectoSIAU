@@ -64,6 +64,7 @@ void limpiarConsola();
 
 void agregarDatos(struct SIAU * siau);
 void listarDatos(struct SIAU * siau);
+void listarDatosCarpeta(struct Carpeta *carpeta);
 void buscarDatos(struct SIAU * siau);
 void modificarDatos(struct SIAU * siau);
 void borrarDatos(struct SIAU * siau);
@@ -84,6 +85,7 @@ void imprimirImputado(char *imputado);
 void imprimirRegistro(struct Registro *registro);
 void imprimirCausa(struct Causa *causa);
 void recorrerImputados(char **imputados, int cantidad); /*Cambiar por recorrerImprimirImputados en vez de recorrer?*/
+void ordenarImputados(char **arreglo, int pLibre);
 void recorrerRegistrosParaImprimirlos(struct NodoRegistro *listaRegistros);
 void recorrerCausasParaImprimirlas(struct NodoCausa *actual);
 void listarCarpetas(struct Carpeta *carpeta, int parametro);
@@ -491,12 +493,38 @@ void imprimirCausa(struct Causa *causa) {
     printf("\n");
 }
 
-/*Funcion que recorre un arreglo de imputados y llama a la funcion para imprimirlos*/
+/*Funcion que recorre un arreglo de imputados y llama a la funcion para imprimirlos.
+ Antes de recorrer el arreglo para imprimir, ordena los datos alfabeticamente.*/
 void recorrerImputados(char **imputados, int cantidad) {
     int i;
+
+    ordenarImputados(imputados, cantidad);
+
     for (i = 0 ; i < cantidad ; i ++) {
         imprimirImputado(imputados[i]);
     }
+}
+
+void ordenarImputados(char **arreglo, int pLibre){
+    char *aux = NULL;
+    int x, y, menor;
+
+    for(x = 0; x < pLibre ; x++){
+        menor = x;
+        for(y = x + 1; y < pLibre; y++){
+            if(strcmp(arreglo[y],arreglo[menor]) < 0){
+                menor = y;
+            }
+        }
+
+        if(menor != x){
+            aux = arreglo[x];
+            arreglo[x] = arreglo[menor];
+            arreglo[menor] = aux;
+        }
+    }
+
+    return;
 }
 
 /*Funcion que recorre una lista de registros y llama a la funcion para imprimir cada uno de ellos*/
