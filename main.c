@@ -321,6 +321,8 @@ struct Registro * crearRegistro(int tipoRegistro){
 
     nuevo->involucrado = leerCadena(strcat(bufferInvolucrado,tiposInvolucrado[tipoRegistro]));
 
+    if (tipoRegistro == 4)
+        printf("Considere las opciones:\n'Sentencia'-'Sobreseimiento'-'AutorizacionDiligencia'-'MedidaCautelar'-'MedidaProteccion'-'ArchivoProvisional'\n");
     nuevo->detalle = leerCadena(strcat(bufferDetalle,tiposDetalle[tipoRegistro]));
 
     nuevo->fechaRegistro = leerCadena(strcat(bufferFecha,tiposFecha[tipoRegistro]));
